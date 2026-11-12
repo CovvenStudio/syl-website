@@ -1,0 +1,1630 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Syl · a engenheira de QA do seu time</title>
+<meta name="description" content="A Syl acompanha os itens do seu time no Azure DevOps ou no Jira, lê critérios, comentários e o código do PR, escreve e roda os casos de teste e pede a sua aprovação. Roda no seu computador, com a assinatura de IA que vocês já têm.">
+<meta name="theme-color" content="#0e0f12">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Syl's site (2026-11-12): the panel's palette and mark, a product page that shows the work —
+   the screens are rebuilt in HTML with a made-up project (Lumen Pay), never client data. */
+:root {
+  color-scheme: dark;
+  --bg: #0e0f12;
+  --bg-2: #121318;
+  --surface: #17181c;
+  --surface-2: #1e1f24;
+  --surface-3: #26282e;
+  --line: rgba(255,255,255,0.07);
+  --line-strong: rgba(255,255,255,0.13);
+  --text: #f4f4f6;
+  --text-2: #c7c8ce;
+  --muted: #8b8d96;
+  --faint: #5f616a;
+  --accent: #64d2ff;
+  --accent-dim: rgba(100,210,255,0.12);
+  --violet: #a18cff;
+  --violet-dim: rgba(161,140,255,0.14);
+  --ok: #30d158;
+  --ok-dim: rgba(48,209,88,0.14);
+  --bad: #ff453a;
+  --bad-dim: rgba(255,69,58,0.14);
+  --warn: #ffb340;
+  --warn-dim: rgba(255,179,64,0.14);
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --radius: 18px;
+  --ease: cubic-bezier(.2,.7,.2,1);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+img, video { max-width: 100%; display: block; }
+a { color: var(--accent); text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
+::selection { background: rgba(100,210,255,.28); }
+h1, h2, h3 { margin: 0; letter-spacing: -0.025em; text-wrap: balance; }
+p { margin: 0; }
+code, .mono { font-family: var(--mono); }
+/* No ligatures in code: "-<" must stay two characters, not an arrow. */
+code, .mono, .cmd, .code, .tool { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+.wrap { width: 100%; max-width: 1160px; margin: 0 auto; padding-inline: max(16px, env(safe-area-inset-left, 0px)); }
+@media (min-width: 640px) { .wrap { padding-inline: 28px; } }
+
+/* Background glow */
+.glow { position: fixed; inset: 0; z-index: -1; pointer-events: none; background:
+  radial-gradient(900px 600px at 15% -10%, rgba(100,210,255,.10), transparent 70%),
+  radial-gradient(800px 600px at 95% 10%, rgba(161,140,255,.08), transparent 70%), var(--bg); }
+
+/* Top bar */
+.top { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--bg) 78%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
+.top-in { display: flex; align-items: center; gap: 18px; height: 64px; }
+.brand { display: flex; align-items: center; gap: 4px; text-decoration: none; color: var(--text); font-weight: 700; font-size: 1.2rem; letter-spacing: -.02em; }
+.brand img { width: 34px; height: 34px; border-radius: 50%; }
+.top nav { display: flex; gap: 22px; margin-left: auto; font-size: .92rem; }
+.top nav a { color: var(--text-2); text-decoration: none; }
+.top nav a:hover { color: var(--text); }
+.lang { display: inline-flex; padding: 3px; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); }
+.lang button { border: 0; background: none; color: var(--muted); font: 600 .78rem var(--sans); padding: 5px 10px; border-radius: 999px; cursor: pointer; }
+.lang button[aria-pressed="true"] { background: var(--surface-3); color: var(--text); }
+@media (max-width: 860px) { .top nav { display: none; } .lang { margin-left: auto; } }
+@media (max-width: 420px) { .top .btn.small { display: none; } }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 13px 22px; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--text); text-decoration: none; font-weight: 600; font-size: .98rem; background: rgba(255,255,255,.02); transition: border-color .2s, transform .2s, background .2s; }
+.btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #04121a; box-shadow: 0 10px 40px -12px rgba(100,210,255,.6); }
+.btn.primary:hover { background: #8adfff; }
+.btn.small { padding: 8px 16px; font-size: .88rem; }
+.btn svg { width: 18px; height: 18px; flex: none; }
+
+/* Syl's mark with the breathing halo */
+.core { position: relative; display: grid; place-items: center; }
+.core img { position: relative; z-index: 1; width: 100%; height: 100%; border-radius: 50%; }
+.core::before, .core::after { content: ""; position: absolute; inset: -16%; border-radius: 50%; border: 1.5px solid var(--accent); opacity: .22; animation: breathe 5.2s ease-in-out infinite; }
+.core::after { inset: -34%; opacity: .12; animation-delay: -2.6s; }
+.core .arc { position: absolute; inset: -7%; border-radius: 50%; border: 2.5px solid transparent; border-top-color: var(--accent); border-right-color: rgba(100,210,255,.35); animation: spin 6s linear infinite; }
+.core .halo { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 80px 10px rgba(100,210,255,.22); animation: breathe 5.2s ease-in-out infinite; }
+@keyframes breathe { 0%,100% { transform: scale(1); opacity: .14; } 50% { transform: scale(1.05); opacity: .32; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Hero */
+.hero { padding: clamp(56px, 9vw, 110px) 0 40px; text-align: center; }
+/* The hero's Syl, as in the immersive mode: a turning sphere of stars around her mark. */
+.hero { padding-top: clamp(16px, 4vw, 40px); }
+.hero-sky { position: relative; height: clamp(330px, 44vw, 480px); margin: 0 auto 6px; }
+.hero-sky canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hero-sky .mark { position: absolute; left: 50%; top: 50%; width: 92px; height: 92px; transform: translate(-50%, -50%); border-radius: 50%; box-shadow: 0 0 70px 6px rgba(100,210,255,.28); transition: opacity .7s var(--ease); }
+.hero-sky.word .mark { opacity: .12; }
+.eyebrow { display: inline-flex; align-items: center; gap: 8px; font: 600 .78rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.hero h1 { margin-top: 18px; font-size: clamp(2.5rem, 6.6vw, 4.6rem); line-height: 1.02; font-weight: 800; letter-spacing: -.045em; }
+.hero h1 em { font-style: normal; background: linear-gradient(90deg, var(--accent), var(--violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero .sub { margin: 22px auto 0; max-width: 680px; color: var(--text-2); font-size: clamp(1.05rem, 1.6vw, 1.2rem); }
+.hero-actions { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.facts { margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 22px; font-size: .88rem; color: var(--muted); }
+.facts span::before { content: "✓"; color: var(--ok); margin-right: 7px; font-weight: 700; }
+
+/* Product window (rebuilt panel) */
+.window { position: relative; margin: 56px auto 0; max-width: 980px; border-radius: 22px; border: 1px solid var(--line-strong); background: linear-gradient(180deg, #15161a, #101115); box-shadow: 0 50px 120px -40px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.02), 0 30px 120px -60px rgba(100,210,255,.45); overflow: hidden; text-align: left; }
+.window-bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: .78rem; color: var(--muted); }
+.window-bar i { width: 11px; height: 11px; border-radius: 50%; background: var(--surface-3); }
+.window-bar span { margin-left: 10px; font-family: var(--mono); }
+.window-body { display: grid; grid-template-columns: 58px minmax(0, 1fr); min-height: 460px; }
+.rail { border-right: 1px solid var(--line); padding: 14px 0; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.rail img { width: 30px; height: 30px; border-radius: 50%; }
+.rail b { width: 22px; height: 22px; border-radius: 7px; background: var(--surface-2); }
+.rail b.on { background: var(--surface-3); box-shadow: inset 0 0 0 1px var(--line-strong); }
+.thread { padding: 26px clamp(16px, 4vw, 40px) 18px; display: flex; flex-direction: column; gap: 18px; }
+.bubble { align-self: flex-end; max-width: 78%; padding: 12px 18px; border-radius: 20px; background: var(--surface-2); font-size: .95rem; }
+.syl-msg { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; }
+.syl-msg > img { width: 30px; height: 30px; border-radius: 50%; }
+.syl-msg .who { font-size: .8rem; color: var(--muted); margin-bottom: 6px; }
+.tools { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.tool { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font: 500 .74rem var(--mono); color: var(--text-2); }
+.tool::before { content: "✓"; color: var(--ok); font-weight: 700; }
+.answer { font-size: .95rem; color: var(--text); }
+.answer ul { margin: 8px 0 0; padding-left: 20px; color: var(--text-2); }
+.answer li { margin: 4px 0; }
+.answer b { color: var(--text); }
+.proposal { margin-top: 14px; border: 1px solid var(--line-strong); border-radius: 16px; background: var(--surface); padding: 14px 16px; }
+.proposal-head { display: flex; align-items: center; gap: 10px; font-size: .8rem; color: var(--muted); }
+.proposal-head b { color: var(--accent); font: 700 .7rem var(--sans); letter-spacing: .12em; text-transform: uppercase; }
+.proposal h4 { margin: 6px 0 10px; font-size: 1rem; }
+.cases { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.cases li { padding: 8px 12px; border-radius: 10px; background: var(--surface-2); font-size: .84rem; color: var(--text-2); min-width: 0; }
+.cases li b { color: var(--accent); margin-right: 6px; }
+.proposal-actions { margin-top: 12px; display: flex; gap: 8px; }
+.proposal-actions span { padding: 8px 18px; border-radius: 12px; font-size: .86rem; font-weight: 600; }
+.proposal-actions .yes { background: var(--accent); color: #04121a; animation: approve 6s var(--ease) infinite; }
+.proposal-actions .no { border: 1px solid var(--line-strong); color: var(--text-2); }
+@keyframes approve { 0%, 70% { background: var(--accent); } 76%, 100% { background: var(--ok); } }
+.composer { margin: 4px clamp(16px, 4vw, 40px) 20px; padding: 14px 18px; border: 1px solid var(--line-strong); border-radius: 18px; color: var(--faint); font-size: .92rem; display: flex; justify-content: space-between; align-items: center; }
+.composer i { width: 30px; height: 30px; border-radius: 50%; background: var(--surface-3); }
+@media (max-width: 640px) { .window-body { grid-template-columns: minmax(0, 1fr); } .rail { display: none; } .cases { grid-template-columns: 1fr; } .bubble { max-width: 92%; } }
+
+/* Sections */
+section.block { padding: clamp(72px, 10vw, 120px) 0; }
+.head { max-width: 760px; margin: 0 auto 48px; text-align: center; display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.head h2 { font-size: clamp(2rem, 4.4vw, 3.1rem); line-height: 1.08; font-weight: 800; letter-spacing: -.04em; }
+.head h2 em { font-style: normal; color: var(--accent); }
+.head p { color: var(--text-2); font-size: 1.08rem; max-width: 620px; }
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+.reveal.in { opacity: 1; transform: none; }
+
+/* Video */
+.video-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 360px); gap: clamp(32px, 6vw, 80px); align-items: center; }
+.video-copy h2 { font-size: clamp(2rem, 4vw, 2.8rem); line-height: 1.1; font-weight: 800; letter-spacing: -.04em; }
+.video-copy p { margin-top: 16px; color: var(--text-2); font-size: 1.05rem; }
+.chapters { list-style: none; margin: 26px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.chapters li { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 12px; align-items: baseline; color: var(--text-2); }
+.chapters time { font: 500 .8rem var(--mono); color: var(--accent); }
+.phone { position: relative; border-radius: 34px; padding: 10px; background: linear-gradient(160deg, #24262c, #121318); border: 1px solid var(--line-strong); box-shadow: 0 40px 100px -40px rgba(100,210,255,.4); }
+.phone video { width: 100%; aspect-ratio: 9/16; border-radius: 26px; background: #000; object-fit: cover; }
+@media (max-width: 820px) { .video-grid { grid-template-columns: minmax(0, 1fr); } .phone { max-width: 340px; margin: 0 auto; } }
+
+/* Pillars */
+.pillars { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.pillar { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 22px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.pillar h3 { font-size: 1.22rem; }
+.pillar p { color: var(--text-2); font-size: .96rem; }
+.pillar .viz { border-radius: 14px; background: var(--bg-2); border: 1px solid var(--line); padding: 14px; display: flex; flex-direction: column; gap: 8px; min-height: 172px; }
+.layer { border-radius: 10px; padding: 8px 12px; background: var(--surface-2); font-size: .8rem; color: var(--text-2); border-left: 3px solid var(--accent); }
+.layer b { display: block; font: 700 .64rem var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 2px; }
+.layer.v { border-color: var(--violet); } .layer.v b { color: var(--violet); }
+.layer.g { border-color: var(--ok); font-family: var(--mono); font-size: .72rem; } .layer.g b { color: var(--ok); font-family: var(--sans); }
+.run { display: flex; align-items: center; gap: 10px; font-size: .84rem; color: var(--text-2); padding: 6px 4px; border-bottom: 1px solid var(--line); }
+.run:last-child { border-bottom: 0; }
+.dot { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: .66rem; font-weight: 800; color: #0b0c0f; flex: none; }
+.dot.ok { background: var(--ok); } .dot.bad { background: var(--bad); } .dot.wait { background: var(--surface-3); color: var(--muted); }
+.run.bad { color: #ff7a72; }
+.decide { margin: auto 0; display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
+.decide .card { border-radius: 12px; background: var(--surface-2); padding: 10px 12px; font-size: .82rem; color: var(--text-2); }
+.decide .row { display: flex; gap: 8px; }
+.decide .row span { flex: 1; text-align: center; padding: 9px; border-radius: 10px; font-size: .84rem; font-weight: 700; }
+.decide .row .yes { background: var(--ok); color: #04150a; }
+.decide .row .no { border: 1px solid var(--line-strong); color: var(--muted); }
+@media (max-width: 900px) { .pillars { grid-template-columns: minmax(0, 1fr); } }
+
+/* Situations */
+.situations { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.situation { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 22px; display: flex; flex-direction: column; gap: 14px; transition: border-color .2s, transform .2s; min-width: 0; }
+.situation:hover { border-color: var(--line-strong); transform: translateY(-2px); }
+.sit-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chip { display: inline-flex; padding: 3px 10px; border-radius: 999px; font: 600 .72rem var(--sans); background: var(--surface-3); color: var(--text-2); white-space: nowrap; }
+.chip.a { background: var(--accent-dim); color: var(--accent); } .chip.v { background: var(--violet-dim); color: var(--violet); } .chip.g { background: var(--ok-dim); color: var(--ok); } .chip.w { background: var(--warn-dim); color: var(--warn); }
+.situation h3 { font-size: 1.1rem; line-height: 1.3; }
+.situation ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.situation li { position: relative; padding-left: 22px; font-size: .9rem; color: var(--text-2); }
+.situation li::before { content: "→"; position: absolute; left: 0; color: var(--accent); }
+@media (max-width: 980px) { .situations { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .situations { grid-template-columns: minmax(0, 1fr); } }
+
+/* Before / after */
+.versus { display: grid; grid-template-columns: minmax(0, 1fr) 60px minmax(0, 1fr); gap: 12px; align-items: stretch; }
+.side { border-radius: var(--radius); padding: 26px; border: 1px solid var(--line); background: var(--surface); }
+.side h3 { font-size: 1.05rem; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+.side ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.side li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; font-size: .95rem; color: var(--text-2); }
+.side li::before { font-weight: 800; }
+.side.without li::before { content: "✗"; color: var(--bad); }
+.side.with { border-color: rgba(100,210,255,.35); background: linear-gradient(180deg, rgba(100,210,255,.07), var(--surface)); }
+.side.with li { color: var(--text); }
+.side.with li::before { content: "✓"; color: var(--ok); }
+.side.without .term { font: 500 .78rem var(--mono); color: var(--muted); margin-bottom: 14px; }
+.arrow { display: grid; place-items: center; color: var(--accent); font-size: 1.8rem; }
+@media (max-width: 820px) { .versus { grid-template-columns: minmax(0, 1fr); } .arrow { transform: rotate(90deg); height: 30px; } }
+
+/* Connections */
+.logos { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.logos .logo { flex: 0 1 172px; }
+@media (max-width: 520px) { .logos .logo { flex: 1 1 150px; } }
+.logo { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); font-weight: 600; font-size: .92rem; min-width: 0; }
+.logo i { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font: 800 .8rem var(--sans); font-style: normal; color: #fff; flex: none; }
+.logo small { display: block; color: var(--muted); font-weight: 500; font-size: .74rem; }
+
+/* Engines */
+.engines { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.engine { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 24px; display: flex; flex-direction: column; gap: 10px; }
+.engine .mark { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; color: #fff; }
+.engine h3 { font-size: 1.15rem; }
+.engine p { color: var(--text-2); font-size: .92rem; }
+.engine .chip { align-self: flex-start; }
+.note { margin-top: 18px; text-align: center; color: var(--muted); font-size: .92rem; }
+@media (max-width: 820px) { .engines { grid-template-columns: minmax(0, 1fr); } }
+
+/* Comparison */
+.compare { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+.compare th, .compare td { padding: 15px 18px; text-align: left; border-bottom: 1px solid var(--line); font-size: .95rem; }
+.compare tr:last-child td { border-bottom: 0; }
+.compare thead th { font-size: .82rem; color: var(--muted); font-weight: 600; background: var(--bg-2); }
+.compare thead th.syl { color: var(--accent); }
+.compare td:not(:first-child), .compare th:not(:first-child) { text-align: center; width: 22%; }
+.compare td.syl { background: rgba(100,210,255,.05); }
+.yes, .part, .no-mark { font-weight: 700; font-size: .85rem; }
+.compare .yes::before { content: "✓ "; } .compare .yes { color: var(--ok); }
+.part { color: var(--warn); } .part::before { content: "◐ "; }
+.no-mark { color: var(--faint); } .no-mark::before { content: "✗ "; }
+@media (max-width: 640px) { .compare th, .compare td { padding: 12px 10px; font-size: .84rem; } }
+
+/* Capabilities */
+.caps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.cap { border: 1px solid var(--line); border-radius: 16px; background: var(--surface); padding: 20px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.cap .ic { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; background: var(--accent-dim); color: var(--accent); }
+.cap .ic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.cap h3 { font-size: 1rem; }
+.cap p { color: var(--text-2); font-size: .88rem; }
+@media (max-width: 980px) { .caps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .caps { grid-template-columns: minmax(0, 1fr); } }
+
+/* What she does: eight fronts of QA work */
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; max-width: 860px; margin: 0 auto 30px; }
+.stats div { text-align: center; padding: 16px 10px; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); }
+.stats b { display: block; font-size: 2rem; font-weight: 800; letter-spacing: -.03em; background: linear-gradient(90deg, var(--accent), var(--violet)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.stats span { font-size: .84rem; color: var(--muted); }
+.capx-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.capx { --c: var(--accent); position: relative; display: flex; flex-direction: column; gap: 12px; padding: 20px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); overflow: hidden; min-width: 0; transition: border-color .2s, transform .2s; }
+.capx::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 2px; background: linear-gradient(90deg, var(--c), transparent); opacity: .8; }
+.capx:hover { border-color: color-mix(in srgb, var(--c) 45%, var(--line)); transform: translateY(-2px); }
+.capx.g { --c: var(--ok); } .capx.w { --c: var(--warn); } .capx.v { --c: var(--violet); }
+.capx-top { display: flex; align-items: center; gap: 10px; }
+.capx-ic { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: var(--c); background: #121418; border: 1.5px solid var(--c); box-shadow: 0 0 20px -6px var(--c); flex: none; }
+.capx-ic svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.capx-cat { font: 700 .68rem var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--c); }
+.capx h3 { font-size: 1.05rem; line-height: 1.3; }
+.capx ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.capx li { position: relative; padding-left: 20px; font-size: .86rem; color: var(--text-2); line-height: 1.45; }
+.capx li::before { content: "✓"; position: absolute; left: 0; top: 0; color: var(--c); font-weight: 800; font-size: .8rem; }
+.capx-ask { margin-top: auto; padding: 9px 12px; border-radius: 12px; background: color-mix(in srgb, var(--c) 9%, #0e0f12); border: 1px solid color-mix(in srgb, var(--c) 22%, transparent); font-size: .82rem; color: var(--text); }
+.capx-ask b { color: var(--c); font-weight: 700; margin-right: 4px; }
+.capx-strip { margin-top: 22px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 10px; color: var(--text-2); font-size: .92rem; }
+@media (max-width: 1080px) { .capx-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .capx-grid { grid-template-columns: minmax(0, 1fr); } .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Steps */
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; counter-reset: step; }
+.step { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); padding: 24px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.step .n { font: 600 .82rem var(--mono); color: var(--accent); }
+.step h3 { font-size: 1.15rem; }
+.step p { color: var(--text-2); font-size: .93rem; }
+.cmd { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 14px; border-radius: 12px; background: #0a0b0d; border: 1px solid var(--line); font: 500 .82rem var(--mono); color: var(--text); overflow-x: auto; white-space: nowrap; }
+.cmd > span::before { content: "$ "; color: var(--accent); }
+/* A long command wraps in its own space instead of running under the Copy button. */
+.cmd > span { flex: 1; min-width: 0; white-space: normal; overflow-wrap: anywhere; line-height: 1.5; }
+.cmd > span, .cmd > span * { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+.cmd .nb { white-space: nowrap; }
+.cmd.plain > span::before { content: none; }
+.cmd button { border: 1px solid var(--line-strong); background: none; color: var(--muted); border-radius: 8px; font: 600 .7rem var(--sans); padding: 4px 8px; cursor: pointer; flex: none; }
+.cmd button:hover { color: var(--text); }
+/* Closed testing phase: access by conversation */
+.beta { max-width: 860px; margin: 0 auto 28px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px 28px; align-items: center; padding: 24px 26px; border-radius: 20px; border: 1px solid rgba(100,210,255,.35); background: linear-gradient(120deg, rgba(100,210,255,.10), rgba(161,140,255,.08) 60%, var(--surface)); box-shadow: 0 30px 80px -50px rgba(100,210,255,.6); }
+.beta .pill { display: inline-flex; align-items: center; gap: 8px; font: 600 .72rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--warn); }
+.beta .pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 10px var(--warn); }
+.beta h3 { font-size: 1.3rem; margin-top: 8px; }
+.beta p { color: var(--text-2); margin-top: 8px; font-size: .96rem; }
+.btn.li { background: #0a66c2; border-color: #0a66c2; color: #fff; }
+.btn.li:hover { background: #0b74db; }
+@media (max-width: 720px) { .beta { grid-template-columns: minmax(0, 1fr); } .beta .btn { justify-self: start; } }
+.req { margin-top: 22px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 20px; color: var(--muted); font-size: .88rem; }
+.req b { color: var(--text-2); font-weight: 600; }
+@media (max-width: 900px) { .steps { grid-template-columns: minmax(0, 1fr); } }
+
+/* Guarantees */
+.motto { text-align: center; font-size: clamp(1.9rem, 4.6vw, 3.3rem); font-weight: 800; letter-spacing: -.04em; line-height: 1.1; margin-bottom: 44px; }
+.motto span { display: block; color: var(--faint); }
+.motto span:nth-child(2) { color: var(--text-2); }
+.motto span:nth-child(3) { color: var(--accent); }
+.guards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.guard { border: 1px solid var(--line); border-radius: 16px; background: var(--surface); padding: 20px; }
+.guard h3 { font-size: 1rem; display: flex; align-items: center; gap: 10px; }
+.guard h3::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 10px var(--ok); }
+.guard p { margin-top: 8px; color: var(--text-2); font-size: .9rem; }
+@media (max-width: 900px) { .guards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .guards { grid-template-columns: minmax(0, 1fr); } }
+
+/* FAQ */
+.faq { max-width: 820px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+.faq details { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.faq summary { list-style: none; cursor: pointer; padding: 18px 20px; font-weight: 600; display: flex; justify-content: space-between; gap: 16px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; color: var(--accent); font-size: 1.3rem; line-height: 1; transition: transform .2s; }
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq details p { padding: 0 20px 18px; color: var(--text-2); }
+
+/* Closing */
+.closing { text-align: center; padding: clamp(80px, 12vw, 140px) 0; position: relative; }
+.closing .core { width: 120px; height: 120px; margin: 0 auto 84px; }
+.closing h2 { font-size: clamp(2.2rem, 5.4vw, 3.8rem); font-weight: 800; letter-spacing: -.045em; line-height: 1.05; }
+.closing p { margin: 18px auto 0; max-width: 560px; color: var(--text-2); font-size: 1.08rem; }
+.closing .hero-actions { margin-top: 30px; }
+.closing small { display: block; margin-top: 18px; color: var(--muted); font-size: .86rem; }
+
+footer { border-top: 1px solid var(--line); padding: 28px 0 calc(28px + env(safe-area-inset-bottom, 0px)); color: var(--muted); font-size: .86rem; }
+.foot { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; justify-content: space-between; }
+.foot a { color: var(--text-2); text-decoration: none; }
+.foot a:hover { color: var(--text); }
+.foot .brand { font-size: 1rem; }
+.foot .brand img { width: 26px; height: 26px; }
+
+/* Journey: the whole QA work on one item, step by step */
+.journey { display: grid; grid-template-columns: minmax(0, 330px) minmax(0, 1fr); gap: 22px; align-items: start; }
+.j-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.j-steps button { width: 100%; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; align-items: start; text-align: left; padding: 12px 14px; border-radius: 14px; border: 1px solid transparent; background: none; color: var(--text-2); font: inherit; cursor: pointer; transition: background .2s, border-color .2s; }
+.j-steps button:hover { background: var(--surface); }
+.j-steps button[aria-selected="true"] { background: var(--surface); border-color: rgba(100,210,255,.35); color: var(--text); }
+.j-steps .num { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 600 .8rem var(--mono); background: var(--surface-2); color: var(--muted); }
+.j-steps button[aria-selected="true"] .num { background: var(--accent); color: #04121a; }
+.j-steps b { display: block; font-size: .98rem; color: inherit; }
+.j-steps small { display: block; font-size: .82rem; color: var(--muted); margin-top: 2px; }
+.j-stage { position: relative; border-radius: 22px; border: 1px solid var(--line-strong); background: linear-gradient(180deg, #15161a, #101115); box-shadow: 0 40px 100px -50px rgba(100,210,255,.4); min-height: 520px; overflow: hidden; }
+.j-panel { padding: 26px; display: none; flex-direction: column; gap: 14px; }
+.j-panel.on { display: flex; animation: jin .45s var(--ease); }
+@keyframes jin { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.j-panel h3 { font-size: 1.25rem; }
+.j-panel > p { color: var(--text-2); font-size: .96rem; }
+.mock { border-radius: 16px; border: 1px solid var(--line); background: var(--surface); padding: 16px; display: flex; flex-direction: column; gap: 10px; font-size: .88rem; }
+.mock-h { display: flex; align-items: center; gap: 10px; font-size: .78rem; color: var(--muted); flex-wrap: wrap; }
+.mock-h b { color: var(--accent); font: 700 .68rem var(--sans); letter-spacing: .12em; text-transform: uppercase; }
+.mock .t { font-weight: 600; font-size: .98rem; color: var(--text); }
+.kv { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 6px 12px; font-size: .84rem; }
+.kv dt { color: var(--muted); } .kv dd { margin: 0; color: var(--text-2); }
+.crit { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-top: 1px solid var(--line); }
+.crit:first-of-type { border-top: 0; }
+.crit .id { font: 600 .74rem var(--mono); color: var(--muted); padding-top: 2px; flex: none; }
+.crit p { color: var(--text); }
+.crit .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.comment { border-left: 3px solid var(--accent); padding: 10px 14px; background: var(--bg-2); border-radius: 0 12px 12px 0; color: var(--text-2); font-size: .86rem; }
+.comment .at { color: var(--accent); font-weight: 600; }
+.comment ol { margin: 6px 0 0; padding-left: 18px; }
+.sent { display: inline-flex; align-items: center; gap: 6px; color: var(--ok); font-size: .82rem; font-weight: 600; }
+.sent::before { content: "✓"; }
+.code { font: 500 .78rem/1.6 var(--mono); background: #0a0b0d; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; white-space: pre; overflow-x: auto; color: var(--text-2); }
+.code .k { color: var(--violet); } .code .s { color: var(--ok); } .code .c { color: var(--faint); }
+.flow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.flow .chip { font-size: .78rem; }
+.flow .to { color: var(--accent); }
+@media (max-width: 900px) {
+  .journey { grid-template-columns: minmax(0, 1fr); }
+  .j-steps { flex-direction: row; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x mandatory; }
+  .j-steps li { flex: 0 0 auto; scroll-snap-align: start; }
+  .j-steps button { grid-template-columns: 28px auto; padding: 8px 12px; }
+  .j-steps small { display: none; }
+  .j-stage { min-height: 0; }
+  .j-panel { padding: 18px; }
+}
+
+/* What the team already has */
+.existing { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.ex { border: 1px solid var(--line); border-radius: 16px; background: var(--surface); padding: 20px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ex .q { font: 500 .8rem var(--mono); color: var(--accent); background: var(--accent-dim); border-radius: 10px; padding: 8px 10px; }
+.ex h3 { font-size: 1rem; }
+.ex p { color: var(--text-2); font-size: .88rem; }
+@media (max-width: 980px) { .existing { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .existing { grid-template-columns: minmax(0, 1fr); } }
+
+/* Mission → Test Case → automated test */
+.pipe { display: grid; grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr) 40px minmax(0, 1.25fr); gap: 10px; align-items: stretch; }
+.pipe .stage { border: 1px solid var(--line); border-radius: 18px; background: var(--surface); padding: 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.pipe .stage h3 { font-size: 1.02rem; }
+.pipe .stage p { color: var(--text-2); font-size: .88rem; }
+.pipe .arrow { font-size: 1.5rem; }
+@media (max-width: 980px) { .pipe { grid-template-columns: minmax(0, 1fr); } .pipe .arrow { transform: rotate(90deg); height: 26px; } }
+
+/* Memory and Syl Brain */
+.brain-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 18px; align-items: stretch; }
+.brain { position: relative; border-radius: 22px; border: 1px solid var(--line-strong); background: radial-gradient(500px 360px at 50% 50%, rgba(100,210,255,.08), transparent 70%), #0d0e11; min-height: 460px; overflow: hidden; }
+.brain svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.brain .edge { stroke: rgba(255,255,255,.12); stroke-width: 1.2; }
+.brain .edge.hot { stroke: rgba(100,210,255,.55); stroke-dasharray: 4 6; animation: flow 1.6s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -20; } }
+.brain .node { animation: float 7s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.brain .node:nth-child(3n) { animation-delay: -2s; } .brain .node:nth-child(3n+1) { animation-delay: -4.5s; }
+@keyframes float { 0%,100% { transform: translate(0,0); } 50% { transform: translate(0,-6px); } }
+.brain text { font: 600 11px var(--sans); fill: var(--text-2); }
+.brain-legend { position: absolute; left: 14px; bottom: 12px; right: 14px; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .74rem; color: var(--muted); }
+.brain-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+.note-card { border-radius: 22px; border: 1px solid var(--line-strong); background: var(--surface); padding: 22px; display: flex; flex-direction: column; gap: 12px; }
+.note-card .sec { border-top: 1px solid var(--line); padding-top: 10px; }
+.note-card .sec b { display: block; font: 700 .68rem var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.note-card .sec p { color: var(--text-2); font-size: .86rem; }
+.status { display: inline-flex; gap: 6px; align-items: center; font-size: .72rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; }
+.status.val { background: var(--ok-dim); color: var(--ok); } .status.prov { background: var(--warn-dim); color: var(--warn); }
+.mem-points { margin-top: 18px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 900px) { .brain-grid, .mem-points { grid-template-columns: minmax(0, 1fr); } }
+
+/* The team of agents */
+.team-flow { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; margin-bottom: 30px; }
+.team-flow .chip { font-size: .8rem; padding: 6px 12px; }
+.team-flow .to { color: var(--accent); }
+.team { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.agent { border: 1px solid var(--line); border-radius: 16px; background: var(--surface); padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.agent .role { font: 600 .66rem var(--sans); letter-spacing: .12em; text-transform: uppercase; }
+.agent h3 { font-size: .98rem; }
+.agent p { color: var(--text-2); font-size: .84rem; }
+.agent.a .role { color: var(--accent); } .agent.v .role { color: var(--violet); } .agent.g .role { color: var(--ok); } .agent.w .role { color: var(--warn); }
+.team-lead { margin-bottom: 14px; display: flex; gap: 16px; align-items: center; border: 1px solid rgba(100,210,255,.35); border-radius: 18px; background: linear-gradient(90deg, rgba(100,210,255,.08), var(--surface)); padding: 18px 20px; }
+.team-lead img { width: 52px; height: 52px; border-radius: 50%; flex: none; }
+.team-lead p { color: var(--text-2); font-size: .92rem; }
+@media (max-width: 980px) { .team { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .team { grid-template-columns: minmax(0, 1fr); } }
+
+/* Memory: the panel's application map, rebuilt with made-up applications */
+.memwin { border-radius: 22px; border: 1px solid var(--line-strong); background: #0f1013; overflow: hidden; display: grid; grid-template-columns: 270px minmax(0, 1fr); box-shadow: 0 50px 120px -50px rgba(100,210,255,.45); }
+.memwin-side { border-right: 1px solid var(--line); padding: 16px 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.memwin-search { border: 1px solid var(--line-strong); border-radius: 10px; padding: 8px 12px; color: var(--faint); font-size: .84rem; }
+.memwin-tabs { display: flex; gap: 4px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; font-size: .8rem; }
+.memwin-tabs span { flex: 1; text-align: center; padding: 6px; border-radius: 8px; color: var(--muted); }
+.memwin-tabs span.on { background: var(--surface-3); color: var(--text); }
+.memwin-tabs b { background: var(--accent-dim); color: var(--accent); border-radius: 999px; padding: 0 6px; font-size: .7rem; margin-left: 4px; }
+.memwin-count { font-size: .76rem; color: var(--muted); }
+.memwin-count b { color: var(--text); }
+.memwin-h { font: 700 .66rem var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+.apps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.apps li { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 7px 8px; border-radius: 10px; transition: background .3s; }
+.apps li.now { background: rgba(255,179,64,.08); }
+.apps .d { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px rgba(100,210,255,.7); }
+.apps .d.s { width: 8px; height: 8px; justify-self: center; box-shadow: none; }
+.apps li.now .d { background: var(--warn); box-shadow: 0 0 12px rgba(255,179,64,.8); }
+.apps .n { font-size: .84rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.apps small { display: block; font-size: .7rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.apps .c { font: 600 .7rem var(--mono); color: var(--muted); background: var(--surface-2); border-radius: 999px; padding: 2px 8px; }
+.memwin-main { padding: 22px 24px 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.memwin-main h3 { font-size: 1.35rem; }
+.memwin-main > p { color: var(--muted); font-size: .84rem; }
+.memmap { position: relative; margin-top: 10px; border: 1px solid var(--line); border-radius: 16px; background: radial-gradient(420px 300px at 50% 52%, rgba(100,210,255,.10), transparent 70%), #0c0d10; aspect-ratio: 16 / 10; overflow: hidden; }
+.memmap svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.memmap text { font: 500 13px var(--sans); fill: var(--text-2); }
+.memmap text.dim { fill: var(--faint); }
+.mem-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: .74rem; color: var(--muted); margin-top: 8px; }
+.mem-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.mem-legend i { display: inline-block; }
+.mem-now { position: absolute; left: 12px; top: 12px; display: inline-flex; gap: 8px; align-items: center; padding: 6px 12px; border-radius: 999px; background: rgba(12,13,16,.85); border: 1px solid rgba(255,179,64,.4); font-size: .76rem; color: var(--text-2); }
+.mem-now::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 10px var(--warn); }
+.mem-below { margin-top: 18px; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.mem-below .stack { display: flex; flex-direction: column; gap: 14px; }
+@media (max-width: 900px) { .memwin { grid-template-columns: minmax(0, 1fr); } .memwin-side { border-right: 0; border-bottom: 1px solid var(--line); } .memwin-side .apps li:nth-child(n+5) { display: none; } .mem-below { grid-template-columns: minmax(0, 1fr); } .memmap { aspect-ratio: 1 / 1; } }
+
+/* Syl Brain: the agents as a brain, working */
+.brainwin { position: relative; border-radius: 24px; border: 1px solid var(--line-strong); background: #0d0e11; overflow: hidden; box-shadow: 0 60px 140px -60px rgba(100,210,255,.5); margin-bottom: 18px; }
+.brainwin svg { display: block; width: 100%; height: auto; }
+.brainwin .lobe { font: 600 10px var(--mono); letter-spacing: .14em; fill: var(--faint); }
+.brainwin .lbl { font: 500 10.5px var(--sans); fill: var(--muted); transition: fill .3s; }
+.brainwin .ini { font: 700 10px var(--sans); }
+.brainwin .bn.on .lbl { fill: var(--text); }
+.brainwin .bn .ring { opacity: 0; }
+.brainwin .bn.on .ring { opacity: 1; animation: ring 1.4s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes ring { from { transform: scale(1); opacity: .9; } to { transform: scale(2.1); opacity: 0; } }
+.brainwin .be { stroke: rgba(255,255,255,.07); stroke-width: 1; transition: stroke .4s; }
+.brainwin .be.on { stroke: rgba(100,210,255,.7); stroke-width: 1.6; }
+.brain-cap { position: absolute; left: 16px; bottom: 16px; right: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; pointer-events: none; }
+.brain-cap .live { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: rgba(13,14,17,.88); border: 1px solid rgba(100,210,255,.35); font-size: .84rem; color: var(--text); backdrop-filter: blur(6px); }
+.brain-cap .live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); animation: breathe 1.6s ease-in-out infinite; }
+.brain-cap .live b { color: var(--accent); font-weight: 600; }
+.brain-key { display: flex; flex-wrap: wrap; gap: 4px 16px; justify-content: center; font-size: .76rem; color: var(--muted); margin: 4px 0 26px; }
+.brain-key span { display: inline-flex; align-items: center; gap: 6px; }
+.brain-key i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+@media (max-width: 640px) { .brain-cap { position: static; padding: 0 12px 12px; } .brainwin .lbl { display: none; } }
+
+/* Agent cards with their icon */
+.agent { flex-direction: row; align-items: flex-start; gap: 14px; }
+.agent > div { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.ag-ic { width: 44px; height: 44px; flex: none; border-radius: 50%; display: grid; place-items: center; background: #121418; border: 1.5px solid currentColor; box-shadow: 0 0 22px -6px currentColor; }
+.ag-ic svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.agent.a .ag-ic { color: var(--accent); } .agent.v .ag-ic { color: var(--violet); } .agent.g .ag-ic { color: var(--ok); } .agent.w .ag-ic { color: var(--warn); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .core::before, .core::after, .core .arc, .core .halo, .proposal-actions .yes { animation: none; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .brain .node, .brain .edge.hot { animation: none; }
+  .j-panel.on { animation: none; }
+}
+</style>
+</head>
+<body>
+<div class="glow" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="#top"><img src="assets/syl-mark-dark.png" alt=""><span>Syl</span></a>
+    <nav aria-label="Seções" data-en-label="Sections">
+      <a href="#jornada" data-en="Your QA">Sua QA</a>
+      <a href="#memoria" data-en="Memory">Memória</a>
+      <a href="#agentes" data-en="Agents">Agentes</a>
+      <a href="#faz" data-en="What she does">O que faz</a>
+      <a href="#instalar" data-en="Try it">Testar</a>
+    </nav>
+    <div class="lang" role="group" aria-label="Idioma">
+      <button type="button" data-lang="pt" aria-pressed="true">PT</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+    <a class="btn primary small" href="#instalar" data-en="Try Syl">Quero testar</a>
+  </div>
+</header>
+
+<main id="top">
+  <!-- 1 · Hero -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-sky" id="hero-sky" aria-hidden="true"><canvas id="sky"></canvas><img class="mark" src="assets/syl-mark-dark.png" alt=""></div>
+      <span class="eyebrow" data-en="QA agent · runs on your computer">Agente de QA · roda no seu computador</span>
+      <h1 data-en="The QA engineer <em>who works with your team</em>">A engenheira de QA <em>que trabalha com o seu time</em></h1>
+      <p class="sub" data-en="Syl follows your items in Azure DevOps or Jira, reads the criteria, the comments and the pull request's code, writes and runs the test cases, and asks for your approval before anything is saved.">A Syl acompanha os itens do seu time no Azure DevOps ou no Jira, lê critérios, comentários e o código do pull request, escreve e roda os casos de teste e pede a sua aprovação antes de gravar qualquer coisa.</p>
+      <div class="hero-actions">
+        <a class="btn primary" href="#instalar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg><span data-en="I want to try Syl">Quero testar a Syl</span></a>
+      </div>
+      <div class="facts">
+        <span data-en="Closed testing phase">Fase de testes fechada</span>
+        <span data-en="macOS and Windows">macOS e Windows</span>
+        <span data-en="Claude Code, Codex or Copilot">Claude Code, Codex ou Copilot</span>
+        <span data-en="No API key">Sem chave de API</span>
+        <span data-en="Your data stays with you">Seus dados ficam com você</span>
+      </div>
+
+      <div class="window reveal" role="img" aria-label="Exemplo de conversa com a Syl sobre um item fictício" data-en-label="Example conversation with Syl about a made-up item">
+        <div class="window-bar"><i></i><i></i><i></i><span data-en="Syl · Conversation · #4812">Syl · Conversa · #4812</span></div>
+        <div class="window-body">
+          <div class="rail" aria-hidden="true"><img src="assets/syl-mark-dark.png" alt=""><b class="on"></b><b></b><b></b><b></b><b></b></div>
+          <div>
+            <div class="thread">
+              <div class="bubble" data-en="Open story 4812 and tell me what's missing before we test">Abre a história 4812 e me diz o que falta antes de testarmos</div>
+              <div class="syl-msg">
+                <img src="assets/syl-mark-dark.png" alt="">
+                <div>
+                  <div class="who">Syl · 09:14</div>
+                  <div class="tools">
+                    <span class="tool" data-en="read item #4812">leitura do item #4812</span>
+                    <span class="tool" data-en="12 comments">12 comentários</span>
+                    <span class="tool" data-en="PR 5517 diff">diff do PR 5517</span>
+                  </div>
+                  <div class="answer">
+                    <p data-en="I read the story, the comments and the PR. Two points before testing:">Li a história, os comentários e o PR. Dois pontos antes de testar:</p>
+                    <ul>
+                      <li data-en="Criterion 2 says <b>one coupon per order</b>, but Ana (PO) wrote yesterday <b>one per customer per month</b>. The PR follows Ana.">O critério 2 diz <b>um cupom por pedido</b>, mas a Ana (PO) escreveu ontem <b>um por cliente por mês</b>. O PR segue a Ana.</li>
+                      <li data-en="The expired-coupon notice is not in the PR yet: I left it as a question on the ticket.">O aviso de cupom vencido ainda não está no PR: deixei como pergunta no ticket.</li>
+                    </ul>
+                  </div>
+                  <div class="proposal">
+                    <div class="proposal-head"><b data-en="Syl proposes">Syl propõe</b><span data-en="in your team's template">no modelo do seu time</span></div>
+                    <h4 data-en="4 test cases for #4812">4 casos de teste para #4812</h4>
+                    <ul class="cases">
+                      <li><b>1</b><span data-en="Valid coupon lowers the total">Cupom válido reduz o total</span></li>
+                      <li><b>2</b><span data-en="Coupon already used this month">Cupom já usado no mês</span></li>
+                      <li><b>3</b><span data-en="Expired coupon shows a notice">Cupom vencido mostra aviso</span></li>
+                      <li><b>4</b><span data-en="Another customer, same coupon">Outro cliente, mesmo cupom</span></li>
+                    </ul>
+                    <div class="proposal-actions"><span class="yes" data-en="Approve">Aprovar</span><span class="no" data-en="Adjust">Ajustar</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="composer"><span data-en="Talk to Syl…">Fale com Syl…</span><i></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · Pillars -->
+  <section class="block" id="como">
+    <div class="wrap">
+      <div class="head reveal">
+        <span class="eyebrow" data-en="How it works">Como funciona</span>
+        <h2 data-en="Give Syl an item. <em>Get the QA work done.</em>">Dê um item à Syl. <em>Receba o trabalho de QA feito.</em></h2>
+        <p data-en="She does the reading and the repetitive writing. You keep the decisions.">Ela faz a leitura e a escrita repetitiva. As decisões continuam com você.</p>
+      </div>
+      <div class="pillars">
+        <article class="pillar reveal">
+          <div class="viz" aria-hidden="true">
+            <div class="layer"><b data-en="Criteria">Critérios</b><span data-en="One coupon per customer, per month">Um cupom por cliente, por mês</span></div>
+            <div class="layer v"><b data-en="Comments">Comentários</b><span data-en="Ana · PO: does it apply in the app too?">Ana · PO: vale também no app?</span></div>
+            <div class="layer g"><b>Pull request</b>+ if (usedThisMonth(customer))</div>
+          </div>
+          <h3 data-en="Reads like a senior QA">Lê como uma QA sênior</h3>
+          <p data-en="The story, the acceptance criteria, every comment and the code of the linked pull requests. She points out contradictions and what is missing to test.">A história, os critérios de aceite, cada comentário e o código dos PRs vinculados. Aponta contradições e o que falta para testar.</p>
+        </article>
+        <article class="pillar reveal">
+          <div class="viz" aria-hidden="true">
+            <div class="run"><span class="dot ok">✓</span><span data-en="Valid coupon">Cupom válido</span></div>
+            <div class="run"><span class="dot ok">✓</span><span data-en="Expired coupon">Cupom vencido</span></div>
+            <div class="run bad"><span class="dot bad">✕</span><span data-en="Coupon already used">Cupom já usado</span></div>
+            <div class="run"><span class="dot ok">✓</span><span data-en="Another customer">Outro cliente</span></div>
+          </div>
+          <h3 data-en="Writes and runs the cases">Escreve e roda os casos</h3>
+          <p data-en="Cases in your team's template, run in the QA environment — on screen, in the database and the API — with evidence of every step.">Casos no modelo do seu time, rodados no ambiente de QA — na tela, no banco e na API — com evidência de cada passo.</p>
+        </article>
+        <article class="pillar reveal">
+          <div class="viz" aria-hidden="true">
+            <div class="decide">
+              <div class="card" data-en="Defect draft · A used coupon still gives a discount">Rascunho de defeito · Cupom já usado ainda dá desconto</div>
+              <div class="row"><span class="yes" data-en="Approve">Aprovar</span><span class="no" data-en="Discard">Descartar</span></div>
+            </div>
+          </div>
+          <h3 data-en="You decide">Você decide</h3>
+          <p data-en="Creating a bug, sending a test case or closing a mission only happens on your click. Nothing reaches the tracker without you.">Criar um bug, enviar um caso de teste ou encerrar uma missão só acontece no seu clique. Nada chega ao tracker sem você.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3b · Journey: one item, from start to finish -->
+  <section class="block" id="jornada">
+    <div class="wrap">
+      <div class="head reveal">
+        <span class="eyebrow" data-en="Your QA engineer">Sua QA Engineer</span>
+        <h2 data-en="A partner in your work, <em>from the story to the automated test</em>">Uma parceira no seu trabalho, <em>da história ao teste automatizado</em></h2>
+        <p data-en="Follow one item through everything Syl does with you. Every step that changes something outside waits for your click.">Acompanhe um item por tudo o que a Syl faz com você. Cada passo que muda algo lá fora espera o seu clique.</p>
+      </div>
+      <div class="journey reveal">
+        <ul class="j-steps" role="tablist" aria-label="Etapas" data-en-label="Steps">
+          <li><button type="button" role="tab" aria-selected="true" data-step="0"><span class="num">1</span><span><b data-en="The story arrives">A história chega</b><small data-en="She notices it in the tracker">Ela percebe no tracker</small></span></button></li>
+          <li><button type="button" role="tab" aria-selected="false" data-step="1"><span class="num">2</span><span><b data-en="Analysis">Análise</b><small data-en="Criteria, comments and code">Critérios, comentários e código</small></span></button></li>
+          <li><button type="button" role="tab" aria-selected="false" data-step="2"><span class="num">3</span><span><b data-en="Questions to the PO">Perguntas ao PO</b><small data-en="A comment on the ticket">Comentário no ticket</small></span></button></li>
+          <li><button type="button" role="tab" aria-selected="false" data-step="3"><span class="num">4</span><span><b data-en="Test cases">Casos de teste</b><small data-en="Your template, to Test Plans">No seu modelo, para o Test Plans</small></span></button></li>
+          <li><button type="button" role="tab" aria-selected="false" data-step="4"><span class="num">5</span><span><b data-en="Validation">Validação</b><small data-en="She runs it in QA">Ela roda no QA</small></span></button></li>
+          <li><button type="button" role="tab" aria-selected="false" data-step="5"><span class="num">6</span><span><b data-en="Defect">Defeito</b><small data-en="Cause and draft">Causa e rascunho</small></span></button></li>
+          <li><button type="button" role="tab" aria-selected="false" data-step="6"><span class="num">7</span><span><b data-en="Report">Relatório</b><small data-en="On the ticket or the wiki">No ticket ou na wiki</small></span></button></li>
+          <li><button type="button" role="tab" aria-selected="false" data-step="7"><span class="num">8</span><span><b data-en="Automation">Automação</b><small data-en="Test Case and Playwright">Test Case e Playwright</small></span></button></li>
+        </ul>
+        <div class="j-stage">
+          <div class="j-panel on" role="tabpanel">
+            <h3 data-en="She notices the story, and every change after it">Ela percebe a história, e cada mudança depois dela</h3>
+            <p data-en="Syl reads your Azure DevOps or Jira every few minutes, within your scope. A new story, a criterion edited, a comment, a new PR or commit: she knows, and decides what is worth redoing.">A Syl lê o seu Azure DevOps ou Jira a cada poucos minutos, dentro do seu escopo. Uma história nova, um critério editado, um comentário, um PR ou commit novo: ela sabe, e decide o que vale refazer.</p>
+            <div class="mock">
+              <div class="mock-h"><b data-en="New in your scope">Novo no seu escopo</b><span>Azure DevOps · Sprint 14</span></div>
+              <div class="t">#4812 · <span data-en="Coupon applied at checkout">Cupom aplicado no checkout</span></div>
+              <dl class="kv"><dt data-en="State">Estado</dt><dd>Ready for testing</dd><dt data-en="Changed">Mudou</dt><dd data-en="criteria edited · 3 new comments · PR 5517 linked">critérios editados · 3 comentários novos · PR 5517 vinculado</dd><dt data-en="Syl will">A Syl vai</dt><dd data-en="update the analysis, redoing only what the change affects">atualizar a análise, refazendo só o que a mudança afeta</dd></dl>
+            </div>
+          </div>
+          <div class="j-panel" role="tabpanel">
+            <h3 data-en="An analysis like a senior QA would write">Uma análise como uma QA sênior escreveria</h3>
+            <p data-en="Each criterion checked: is it clear, is it in the code, does it match the rules your team confirmed. Every claim quotes its source.">Cada critério conferido: está claro, está no código, bate com as regras que o time confirmou. Cada afirmação cita a fonte.</p>
+            <div class="mock">
+              <div class="mock-h"><b data-en="Acceptance criteria">Critérios de aceite</b><span data-en="3 of 4 in the code">3 de 4 no código</span></div>
+              <div class="crit"><span class="id">AC1</span><div><p data-en="A valid coupon lowers the total">Cupom válido reduz o total</p><div class="tags"><span class="chip g" data-en="Clear">Claro</span><span class="chip g" data-en="In the code">No código</span></div></div></div>
+              <div class="crit"><span class="id">AC2</span><div><p data-en="One coupon per order">Um cupom por pedido</p><div class="tags"><span class="chip w" data-en="Conflicts with a comment">Conflita com comentário</span><span class="chip g" data-en="In the code">No código</span></div></div></div>
+              <div class="crit"><span class="id">AC3</span><div><p data-en="An expired coupon shows a notice">Cupom vencido mostra aviso</p><div class="tags"><span class="chip g" data-en="Clear">Claro</span><span class="chip w" data-en="Not in the PR">Fora do PR</span></div></div></div>
+              <div class="crit"><span class="id">AC4</span><div><p data-en="Works in the app too">Vale também no app</p><div class="tags"><span class="chip v" data-en="Inferred from a comment">Inferido de comentário</span></div></div></div>
+            </div>
+          </div>
+          <div class="j-panel" role="tabpanel">
+            <h3 data-en="Questions for the PO, straight on the ticket">Perguntas para o PO, direto no ticket</h3>
+            <p data-en="You accept the questions that matter; Syl writes them on the ticket, mentioning the person who should answer. When the answer comes, she reads it and updates the analysis.">Você aceita as perguntas que importam; a Syl escreve no ticket, mencionando quem deve responder. Quando a resposta chega, ela lê e atualiza a análise.</p>
+            <div class="mock">
+              <div class="mock-h"><b data-en="Comment on #4812">Comentário no #4812</b><span data-en="written by Syl, sent by you">escrito pela Syl, enviado por você</span></div>
+              <div class="comment"><span class="at">@Ana Souza</span> <span data-en="before testing, two questions:">antes de testar, duas perguntas:</span><ol><li data-en="AC2 says one coupon per order; your comment says one per customer per month. Which one holds?">O AC2 diz um cupom por pedido; seu comentário diz um por cliente por mês. Qual vale?</li><li data-en="Should the expired-coupon notice also appear in the app?">O aviso de cupom vencido também aparece no app?</li></ol></div>
+              <span class="sent" data-en="Sent to the ticket · 09:21">Enviado ao ticket · 09:21</span>
+            </div>
+          </div>
+          <div class="j-panel" role="tabpanel">
+            <h3 data-en="Test cases in your template, in your Test Plans">Casos no seu modelo, no seu Test Plans</h3>
+            <p data-en="One case per scenario, covering every criterion, in the template your team registered. Ask for changes by talking. Then send them to the plan and suite you choose: sending again updates, never duplicates.">Um caso por cenário, cobrindo cada critério, no modelo que o seu time cadastrou. Peça ajustes conversando. Depois envie ao plano e à suíte que escolher: reenviar atualiza, nunca duplica.</p>
+            <div class="mock">
+              <div class="mock-h"><b data-en="Template: Web · Lumen Pay">Modelo: Web · Lumen Pay</b><span data-en="4 cases · covers AC1–AC4">4 casos · cobre AC1–AC4</span></div>
+              <div class="crit"><span class="id">TC-01</span><p data-en="Valid coupon lowers the total">Cupom válido reduz o total</p></div>
+              <div class="crit"><span class="id">TC-02</span><p data-en="Coupon already used this month is refused">Cupom já usado no mês é recusado</p></div>
+              <div class="crit"><span class="id">TC-03</span><p data-en="Expired coupon shows a notice">Cupom vencido mostra aviso</p></div>
+              <div class="crit"><span class="id">TC-04</span><p data-en="Same coupon in the app">Mesmo cupom no app</p></div>
+              <div class="flow"><span class="chip a" data-en="Approved by you">Aprovados por você</span><span class="to">→</span><span class="chip">Test Plans · Release 3 › Checkout</span><span class="sent" data-en="4 created">4 criados</span></div>
+            </div>
+          </div>
+          <div class="j-panel" role="tabpanel">
+            <h3 data-en="Validate it for me">Valida para mim</h3>
+            <p data-en="A mission: one step per criterion, each with how it is verified. She works on screen, in the database and the API, and you follow every step live, with evidence.">Uma missão: um passo por critério, cada um com como é verificado. Ela trabalha na tela, no banco e na API, e você acompanha cada passo ao vivo, com evidência.</p>
+            <div class="mock">
+              <div class="mock-h"><b data-en="Mission · running in QA">Missão · rodando no QA</b><span>3/4</span></div>
+              <div class="run"><span class="dot ok">✓</span><span data-en="Coupon LUMEN10 lowers 129.90 to 116.91 · screen and API">Cupom LUMEN10 reduz 129,90 para 116,91 · tela e API</span></div>
+              <div class="run"><span class="dot ok">✓</span><span data-en="orders.discount = 12.99 in the database">orders.discount = 12,99 no banco</span></div>
+              <div class="run bad"><span class="dot bad">✕</span><span data-en="Same coupon again this month: discount applied (expected: refused)">Mesmo cupom de novo no mês: desconto aplicado (esperado: recusado)</span></div>
+              <div class="run"><span class="dot wait">…</span><span data-en="Expired coupon shows the notice">Cupom vencido mostra o aviso</span></div>
+            </div>
+          </div>
+          <div class="j-panel" role="tabpanel">
+            <h3 data-en="A failure, explained before it becomes a bug">Uma falha explicada antes de virar bug</h3>
+            <p data-en="The Defect Analyst investigates: product, test, environment, data or intermittent. Only then the report is drafted, with steps, data and evidence. Creating the Bug or commenting stays your click.">O Analista de defeitos investiga: produto, teste, ambiente, dados ou intermitente. Só então o relato é rascunhado, com passos, dados e evidência. Criar o Bug ou comentar continua sendo o seu clique.</p>
+            <div class="mock">
+              <div class="mock-h"><b data-en="Verdict: product defect">Veredito: defeito do produto</b><span data-en="2 hypotheses ruled out">2 hipóteses descartadas</span></div>
+              <div class="t" data-en="A coupon already used this month still gives a discount">Cupom já usado no mês ainda dá desconto</div>
+              <dl class="kv"><dt data-en="Ruled out">Descartado</dt><dd data-en="test data (customer had 1 order this month) · cache (repeated after reload)">dado de teste (cliente tinha 1 pedido no mês) · cache (repetiu após recarregar)</dd><dt data-en="Evidence">Evidência</dt><dd data-en="2 screenshots · API response · orders query">2 prints · resposta da API · consulta em orders</dd></dl>
+              <div class="flow"><span class="chip w" data-en="Draft">Rascunho</span><span class="to">→</span><span class="chip" data-en="Create Bug">Criar Bug</span><span class="chip" data-en="or comment on #4812">ou comentar no #4812</span></div>
+            </div>
+          </div>
+          <div class="j-panel" role="tabpanel">
+            <h3 data-en="The report, without writing a report">O relatório, sem escrever relatório</h3>
+            <p data-en="Each case with its status, each criterion with the cases that cover it, and the defects. Edit it by asking, then comment it on the ticket or save it as a wiki page.">Cada caso com o status, cada critério com os casos que o cobrem e os defeitos. Edite pedindo, depois comente no ticket ou salve como página da wiki.</p>
+            <div class="mock">
+              <div class="mock-h"><b data-en="Test report · #4812">Relatório de testes · #4812</b><span data-en="3 passed · 1 failed · 1 defect">3 passaram · 1 falhou · 1 defeito</span></div>
+              <dl class="kv"><dt>AC1</dt><dd>TC-01 <span class="sent" data-en="passed">passou</span></dd><dt>AC2</dt><dd>TC-02 · <span style="color:#ff7a72" data-en="failed → Bug 4830">falhou → Bug 4830</span></dd><dt>AC3</dt><dd>TC-03 <span class="sent" data-en="passed">passou</span></dd><dt>AC4</dt><dd>TC-04 <span class="sent" data-en="passed">passou</span></dd></dl>
+              <div class="flow"><span class="chip a" data-en="Comment on the ticket">Comentar no ticket</span><span class="chip" data-en="Save in the wiki">Salvar na wiki</span></div>
+            </div>
+          </div>
+          <div class="j-panel" role="tabpanel">
+            <h3 data-en="What she verified becomes a test that stays">O que ela verificou vira um teste que fica</h3>
+            <p data-en="A mission that passed becomes a Test Case in your plan and, when you want, a Playwright test written from the route she actually followed. She runs it to prove it works; you review before committing.">Uma missão que passou vira um Test Case no seu plano e, quando você quiser, um teste Playwright escrito a partir do caminho que ela seguiu. Ela roda para provar que funciona; você revisa antes do commit.</p>
+            <div class="code"><span class="k">test</span>(<span class="s">'coupon already used this month is refused'</span>, <span class="k">async</span> ({ page }) =&gt; {
+  <span class="k">await</span> page.goto(<span class="s">'/checkout'</span>);
+  <span class="k">await</span> page.getByLabel(<span class="s">'Coupon'</span>).fill(<span class="s">'LUMEN10'</span>);
+  <span class="k">await</span> page.getByRole(<span class="s">'button'</span>, { name: <span class="s">'Apply'</span> }).click();
+  <span class="k">await</span> expect(page.getByText(<span class="s">'Coupon already used'</span>)).toBeVisible();
+});  <span class="c">// ✓ passed in QA · 1 file changed, waiting for your review</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · Situations -->
+  <section class="block">
+    <div class="wrap">
+      <div class="head reveal">
+        <span class="eyebrow" data-en="Every sprint">Toda sprint</span>
+        <h2 data-en="What happens in your sprint, <em>and what Syl does about it</em>">O que acontece na sua sprint, <em>e o que a Syl faz</em></h2>
+      </div>
+      <div class="situations">
+        <article class="situation reveal">
+          <div class="sit-top"><span class="chip">Azure DevOps · Jira</span><span class="chip a" data-en="update, not from scratch">atualiza, não refaz</span></div>
+          <h3 data-en="A criterion changed mid-sprint">O critério mudou no meio da sprint</h3>
+          <ol><li data-en="Notices the item's new version">Percebe a nova versão do item</li><li data-en="Understands what changed">Entende o que mudou</li><li data-en="Redoes only the affected cases, for your review">Refaz só os casos afetados, para a sua revisão</li></ol>
+        </article>
+        <article class="situation reveal">
+          <div class="sit-top"><span class="chip" data-en="Comments">Comentários</span><span class="chip v" data-en="triage">triagem</span></div>
+          <h3 data-en="New comments arrived">Chegaram comentários novos</h3>
+          <ol><li data-en="Reads every new comment">Lê cada comentário novo</li><li data-en="Separates what changes the analysis from chatter">Separa o que muda a análise do que é conversa</li><li data-en="Marks open questions the PO already answered">Marca as perguntas abertas que o PO já respondeu</li></ol>
+        </article>
+        <article class="situation reveal">
+          <div class="sit-top"><span class="chip">Pull request</span><span class="chip g" data-en="criteria × code">critérios × código</span></div>
+          <h3 data-en="The PR was updated">O PR foi atualizado</h3>
+          <ol><li data-en="Reads the diff">Lê o diff</li><li data-en="Checks each criterion in the code">Confere cada critério no código</li><li data-en="Points out gaps and what has no test">Aponta lacunas e o que ficou sem teste</li></ol>
+        </article>
+        <article class="situation reveal">
+          <div class="sit-top"><span class="chip" data-en="Migration">Migração</span><span class="chip a" data-en="one row per unit">uma linha por unidade</span></div>
+          <h3 data-en="A migration touched 30 functions">Uma migração tocou 30 functions</h3>
+          <ol><li data-en="Splits the repeated edit from the logic that changed">Separa a edição repetida da lógica que mudou</li><li data-en="Each unit once, with how to run it without side effects">Cada unidade uma vez, com como rodar sem efeito colateral</li><li data-en="Focused cases on what really changed">Casos focados no que mudou de verdade</li></ol>
+        </article>
+        <article class="situation reveal">
+          <div class="sit-top"><span class="chip" data-en="Mission">Missão</span><span class="chip w" data-en="with evidence">com evidência</span></div>
+          <h3 data-en="A test failed in QA">Um teste falhou no QA</h3>
+          <ol><li data-en="Says whether it is the product, the test, the environment or the data">Diz se é produto, teste, ambiente ou dados</li><li data-en="Drafts the defect with steps and screenshots">Rascunha o defeito com passos e prints</li><li data-en="Waits for your click to create it">Espera o seu clique para criar</li></ol>
+        </article>
+        <article class="situation reveal">
+          <div class="sit-top"><span class="chip">Telegram</span><span class="chip v" data-en="away from the desk">longe do computador</span></div>
+          <h3 data-en="You are away from the computer">Você está longe do computador</h3>
+          <ol><li data-en="Approve a mission from your phone">Aprove uma missão pelo celular</li><li data-en="Follow each step as it happens">Acompanhe cada passo enquanto acontece</li><li data-en="Confirm the result with a button">Confirme o resultado com um botão</li></ol>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4b · What the team already has -->
+  <section class="block">
+    <div class="wrap">
+      <div class="head reveal">
+        <span class="eyebrow" data-en="Your existing tests">Os testes que vocês já têm</span>
+        <h2 data-en="She works with <em>what your team already built</em>">Ela trabalha com <em>o que o seu time já construiu</em></h2>
+        <p data-en="Syl does not start a parallel world. She reads the Test Cases, suites and results you already have in Azure Test Plans, runs them and records the results there.">A Syl não cria um mundo paralelo. Ela lê os Test Cases, suítes e resultados que vocês já têm no Azure Test Plans, roda e registra os resultados lá.</p>
+      </div>
+      <div class="existing">
+        <article class="ex reveal"><span class="q" data-en="Which cases test 4812?">Quais casos testam a 4812?</span><h3 data-en="Reads your Test Cases">Lê os seus Test Cases</h3><p data-en="The cases linked to a story, the suites where each one lives and their last results per configuration.">Os casos ligados a uma história, as suítes onde cada um está e os últimos resultados por configuração.</p></article>
+        <article class="ex reveal"><span class="q" data-en="Run Test Case 121232">Roda o Test Case 121232</span><h3 data-en="Runs a case by its number">Roda um caso pelo número</h3><p data-en="She reads its steps from the tracker and runs them as a mission, each step checked by the case's expected result.">Ela lê os passos no tracker e roda como missão, cada passo conferido pelo resultado esperado do caso.</p></article>
+        <article class="ex reveal"><span class="q" data-en="Run the Checkout smoke regression">Roda a regressão smoke do Checkout</span><h3 data-en="Regression by tag or folder">Regressão por tag ou pasta</h3><p data-en="The suites linked to an application, filtered by tag, folder or title, run in the background.">As suítes ligadas a uma aplicação, filtradas por tag, pasta ou título, rodando em segundo plano.</p></article>
+        <article class="ex reveal"><span class="q" data-en="Record the results">Registra os resultados</span><h3 data-en="Results back in Test Plans">Resultados de volta no Test Plans</h3><p data-en="Each case's result goes to its test point, with the evidence, when you click.">O resultado de cada caso vai para o test point dele, com a evidência, quando você clica.</p></article>
+      </div>
+
+      <div class="head reveal" style="margin-top:80px">
+        <span class="eyebrow" data-en="From a mission to automation">Da missão à automação</span>
+        <h2 data-en="What she checked once <em>keeps being checked</em>">O que ela verificou uma vez <em>continua sendo verificado</em></h2>
+      </div>
+      <div class="pipe reveal">
+        <div class="stage">
+          <span class="chip g" data-en="Mission passed">Missão aprovada</span>
+          <h3 data-en="She validates it in QA">Ela valida no QA</h3>
+          <p data-en="Steps, values seen and screenshots: the route that works, with evidence.">Passos, valores vistos e prints: o caminho que funciona, com evidência.</p>
+        </div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="stage">
+          <span class="chip a">Test Case</span>
+          <h3 data-en="It becomes a Test Case">Vira um Test Case</h3>
+          <p data-en="What was done and verified, edited by you, sent to the plan and suite you choose and linked to the story.">O que foi feito e verificado, editado por você, enviado ao plano e à suíte que escolher e ligado à história.</p>
+        </div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="stage">
+          <span class="chip v">Playwright</span>
+          <h3 data-en="Then an automated test">Depois, um teste automatizado</h3>
+          <p data-en="The Automation Engineer writes it from the real route in your automation repository, creating the project if there is none. Syl runs it; if it breaks later, she investigates and can fix it.">O Automation Engineer escreve a partir do caminho real no seu repositório de automação, criando o projeto se não existir. A Syl roda; se quebrar depois, ela investiga e pode corrigir.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · Before / after -->
+  <section class="block">
+    <div class="wrap">
+      <div class="head reveal">
+        <span class="eyebrow" data-en="Before and after">Antes e depois</span>
+        <h2 data-en="Less repeated work. <em>More real testing.</em>">Menos trabalho repetido. <em>Mais teste de verdade.</em></h2>
+      </div>
+      <div class="versus reveal">
+        <div class="side without">
+          <h3 data-en="Without Syl">Sem a Syl</h3>
+          <ul>
+            <li data-en="Read the story, every comment and the PR by hand">Ler a história, cada comentário e o PR à mão</li>
+            <li data-en="Rewrite the cases each time a criterion changes">Reescrever os casos a cada critério que muda</li>
+            <li data-en="Find out at the end of the sprint that coverage was missing">Descobrir no fim da sprint que faltou cobertura</li>
+            <li data-en="Write the defect report from scratch">Montar o relato do defeito do zero</li>
+            <li data-en="Explain the project's rules again in every new chat">Explicar as regras do projeto de novo a cada chat</li>
+          </ul>
+        </div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="side with">
+          <h3 data-en="With Syl">Com a Syl</h3>
+          <ul>
+            <li data-en="She reads everything and brings what matters">Ela lê tudo e traz o que importa</li>
+            <li data-en="Only the affected cases are redone">Só os casos afetados são refeitos</li>
+            <li data-en="Each criterion checked against the code, early">Cada critério conferido no código, cedo</li>
+            <li data-en="Defect drafted with steps and evidence">Defeito em rascunho, com passos e evidência</li>
+            <li data-en="She remembers each application's rules">Ela lembra das regras de cada aplicação</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5b · Memory and Syl Brain -->
+  <section class="block" id="memoria">
+    <div class="wrap">
+      <div class="head reveal">
+        <span class="eyebrow" data-en="Memory and Syl Brain">Memória e Syl Brain</span>
+        <h2 data-en="A memory of your product <em>that grows with the team</em>">Uma memória do seu produto <em>que cresce com o time</em></h2>
+        <p data-en="Every analysis, mission and conversation teaches Syl something about your applications. Only what you confirm becomes knowledge, and it stays when people rotate.">Cada análise, missão e conversa ensina algo à Syl sobre as suas aplicações. Só o que você confirma vira conhecimento, e ele fica quando as pessoas mudam.</p>
+      </div>
+      <div class="memwin reveal" role="img" aria-label="Exemplo da tela Memória da Syl com aplicações fictícias" data-en-label="Example of Syl's Memory screen with made-up applications">
+        <aside class="memwin-side" aria-hidden="true">
+          <div class="memwin-search" data-en="Search…">Buscar…</div>
+          <div class="memwin-tabs"><span class="on" data-en="Map">Mapa</span><span><span data-en="What's new">Novidades</span><b>4</b></span></div>
+          <div class="memwin-count"><b>214</b> <span data-en="lines · <b>7</b> of 10 applications">linhas · <b>7</b> de 10 aplicações</span></div>
+          <div class="memwin-h" data-en="Applications">Aplicações</div>
+          <ul class="apps" id="mem-apps"></ul>
+        </aside>
+        <div class="memwin-main">
+          <h3 data-en="Map of the applications">Mapa das aplicações</h3>
+          <p data-en="7 of 10 applications with memory. Each dot is one line of what Syl knows.">7 de 10 aplicações com memória. Cada ponto é uma linha do que a Syl sabe.</p>
+          <div class="memmap"><svg id="mem-svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg><span class="mem-now" id="mem-now"></span></div>
+          <div class="mem-legend" aria-hidden="true">
+            <span><i style="width:10px;height:3px;border-top:2px dotted var(--accent)"></i><span data-en="dots: what Syl knows (one line of the note each)">pontos: o que a Syl sabe (uma linha da ficha cada)</span></span>
+            <span><i style="width:16px;border-top:1.5px solid var(--violet)"></i><span data-en="depends on">depende de</span></span>
+            <span><i style="width:16px;border-top:1.5px dashed var(--accent)"></i><span data-en="items in common">itens em comum</span></span>
+            <span><i style="width:9px;height:9px;border-radius:50%;border:1.5px solid var(--accent)"></i><span data-en="learned this week">aprendeu nesta semana</span></span>
+            <span><i style="width:9px;height:9px;border-radius:50%;border:1.5px solid var(--warn)"></i><span data-en="being recalled now">sendo lembrada agora</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="mem-below">
+        <div class="note-card reveal">
+          <div class="mock-h"><b data-en="Application note">Nota da aplicação</b><span>Lumen Pay · Checkout</span></div>
+          <div class="sec"><b data-en="Environments">Ambientes</b><p data-en="QA: checkout-qa.lumenpay.test · API /v2 · database lumen_qa">QA: checkout-qa.lumenpay.test · API /v2 · banco lumen_qa</p></div>
+          <div class="sec"><b data-en="Confirmed business rules">Regras de negócio confirmadas</b><p data-en="One coupon per customer, per month <span class='status val'>validated by Ana · PO</span>">Um cupom por cliente, por mês <span class="status val">validada pela Ana · PO</span></p></div>
+          <div class="sec"><b data-en="How to test it">Como testar</b><p data-en="Customer qa.cupom@lumen.test already used LUMEN10 this month; check orders.discount after paying.">O cliente qa.cupom@lumen.test já usou o LUMEN10 no mês; confira orders.discount depois de pagar.</p></div>
+          <div class="sec"><b data-en="Learned in a mission">Aprendido numa missão</b><p data-en="The discount is recalculated on the payment screen, not only in the cart <span class='status prov'>provisional</span>">O desconto é recalculado na tela de pagamento, não só no carrinho <span class="status prov">provisório</span></p></div>
+          <div class="sec"><b data-en="Still unknown">Ainda desconhecido</b><p data-en="Whether partner coupons follow the same monthly limit.">Se cupons de parceiros seguem o mesmo limite mensal.</p></div>
+        </div>
+      <div class="stack">
+        <article class="guard reveal"><h3 data-en="Per application">Por aplicação</h3><p data-en="Environments, data, rules, how to test and what fails: one note per application, organized by functionality.">Ambientes, dados, regras, como testar e o que falha: uma nota por aplicação, organizada por funcionalidade.</p></article>
+        <article class="guard reveal"><h3 data-en="Confirmed by people">Confirmada por pessoas</h3><p data-en="What Syl infers stays provisional. A rule becomes knowledge when someone on the team validates it.">O que a Syl deduz fica provisório. Uma regra vira conhecimento quando alguém do time valida.</p></article>
+        <article class="guard reveal"><h3 data-en="Teaches newcomers">Ensina quem chega</h3><p data-en="Ask her to teach a story or an application, or to pair test with you. Procedures become reusable Skills.">Peça para ela ensinar uma história ou aplicação, ou fazer pair testing com você. Procedimentos viram Skills reutilizáveis.</p></article>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5c · The team of agents -->
+  <section class="block" id="agentes">
+    <div class="wrap">
+      <div class="head reveal">
+        <span class="eyebrow" data-en="Behind every analysis">Por trás de cada análise</span>
+        <h2 data-en="One Syl, <em>a team of specialists</em> working together">Uma Syl, <em>uma equipe de especialistas</em> trabalhando junto</h2>
+        <p data-en="Each part of the work goes to an agent made for it, with its own instructions and the profession's knowledge. Syl coordinates them and the code checks what each one returns.">Cada parte do trabalho vai para um agente feito para ela, com instruções próprias e o conhecimento da profissão. A Syl coordena e o código confere o que cada um devolve.</p>
+      </div>
+      <div class="brainwin reveal" role="img" aria-label="Syl Brain: os agentes da Syl organizados como um cérebro, trabalhando numa análise" data-en-label="Syl Brain: Syl's agents arranged as a brain, working on an analysis">
+        <svg id="brain-svg" viewBox="0 0 1000 640" aria-hidden="true"></svg>
+        <div class="brain-cap"><span class="live" id="brain-live"></span></div>
+      </div>
+      <div class="brain-key" aria-hidden="true">
+        <span><i style="background:#64d2ff"></i><span data-en="Analysis">Análise</span></span>
+        <span><i style="background:#30d158"></i><span data-en="Execution">Execução</span></span>
+        <span><i style="background:#5ee6c8"></i><span data-en="Learning">Aprendizado</span></span>
+        <span><i style="background:#ffb340"></i><span data-en="Conversation">Conversa</span></span>
+        <span><i style="background:#ff9f5a"></i><span data-en="Personalization">Personalização</span></span>
+        <span><i style="background:#a18cff"></i><span data-en="AI engine">Motor de IA</span></span>
+        <span><i style="background:#9aa0aa;border-radius:2px"></i><span data-en="Component">Componente</span></span>
+        <span><i style="background:#ff6fae;transform:rotate(45deg);border-radius:1px"></i><span data-en="Tool · MCP">Ferramenta · MCP</span></span>
+      </div>
+      <div class="team-lead reveal"><img src="assets/syl-mark-dark.png" alt=""><p data-en="<b>Syl</b> talks to you, understands what you ask, chooses who does each part and puts it together. You talk to one teammate.">A <b>Syl</b> conversa com você, entende o pedido, escolhe quem faz cada parte e junta tudo. Você fala com uma colega só.</p></div>
+      <div class="team">
+        <article class="agent a reveal"><span class="ag-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9zM9 13l2 2 4-4"/></svg></span><div><span class="role" data-en="Analysis">Análise</span><h3 data-en="Requirements analyst">Analista de requisitos</h3><p data-en="Business rules, criteria, contradictions and questions for the PO.">Regras de negócio, critérios, contradições e perguntas para o PO.</p></div></article>
+        <article class="agent a reveal"><span class="ag-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 14-5l2 2M20 12a8 8 0 0 1-14 5l-2-2M20 4v5h-5M4 20v-5h5"/></svg></span><div><span class="role" data-en="Analysis">Análise</span><h3 data-en="What changed">O que mudou</h3><p data-en="When a story changes, finds what moved and what must be redone.">Quando a história muda, acha o que mexeu e o que precisa ser refeito.</p></div></article>
+        <article class="agent a reveal"><span class="ag-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h12v8H9l-4 3v-3H4zM20 9v8h-1v3l-4-3h-4"/></svg></span><div><span class="role" data-en="Analysis">Análise</span><h3 data-en="Comment triage">Triagem de comentários</h3><p data-en="Separates what changes the analysis from conversation, and spots answers.">Separa o que muda a análise da conversa, e encontra respostas.</p></div></article>
+        <article class="agent w reveal"><span class="ag-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4 3 20h18zM12 10v4M12 17h.01"/></svg></span><div><span class="role" data-en="Analysis">Análise</span><h3>Risk Engine</h3><p data-en="Risks and non-functional concerns worth testing.">Riscos e preocupações não funcionais que valem teste.</p></div></article>
+        <article class="agent v reveal"><span class="ag-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5M9.5 9.5 8 11l1.5 1.5M12.5 9.5 14 11l-1.5 1.5"/></svg></span><div><span class="role" data-en="Code">Código</span><h3>Code Scout</h3><p data-en="Reads the real code and the diff before anyone writes a test.">Lê o código real e o diff antes de alguém escrever um teste.</p></div></article>
+        <article class="agent v reveal"><span class="ag-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg></span><div><span class="role" data-en="Code">Código</span><h3 data-en="Code analyst">Analista de código</h3><p data-en="Checks the pull request against each criterion.">Confere o pull request contra cada critério.</p></div></article>
+        <article class="agent v reveal"><span class="ag-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M4 15h16M10 4v16"/></svg></span><div><span class="role" data-en="Code">Código</span><h3 data-en="Unit inventory">Inventário de unidades</h3><p data-en="One row per unit in large migrations, with how to run each without harm.">Uma linha por unidade em migrações grandes, com como rodar cada uma sem dano.</p></div></article>
+        <article class="agent g reveal"><span class="ag-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="19" r="2"/><path d="M6 8v1a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V8M12 12v5"/></svg></span><div><span class="role" data-en="Tests">Testes</span><h3 data-en="Scenario designer">Designer de cenários</h3><p data-en="The coverage model: which scenarios cover which criteria.">O modelo de cobertura: quais cenários cobrem quais critérios.</p></div></article>
+        <article class="agent g reveal"><span class="ag-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></svg></span><div><span class="role" data-en="Tests">Testes</span><h3 data-en="Test case writer">Redator de casos</h3><p data-en="Writes each case in your team's template.">Escreve cada caso no modelo do seu time.</p></div></article>
+        <article class="agent g reveal"><span class="ag-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 12h7M9 16h5"/></svg></span><div><span class="role" data-en="Tests">Testes</span><h3 data-en="Template reader">Leitor de modelos</h3><p data-en="Learns your test case template from a file or an existing case.">Aprende o seu modelo de caso a partir de um arquivo ou de um caso existente.</p></div></article>
+        <article class="agent w reveal"><span class="ag-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span><div><span class="role" data-en="Review">Revisão</span><h3>Critic</h3><p data-en="The senior reviewer: questions the cases before you see them.">O revisor sênior: questiona os casos antes de você ver.</p></div></article>
+        <article class="agent a reveal"><span class="ag-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h4"/></svg></span><div><span class="role" data-en="Review">Revisão</span><h3 data-en="QA editor">Editor de QA</h3><p data-en="Writes the analysis page you read.">Escreve a página de análise que você lê.</p></div></article>
+        <article class="agent g reveal"><span class="ag-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 6h10M10 12h10M10 18h10M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg></span><div><span class="role" data-en="Execution">Execução</span><h3 data-en="Spec writer">Redator de specs</h3><p data-en="Turns approved cases into executable Test Specs.">Transforma casos aprovados em Test Specs executáveis.</p></div></article>
+        <article class="agent g reveal"><span class="ag-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 8h18M12 11l6 2.5-2.6.9-.9 2.6z"/></svg></span><div><span class="role" data-en="Execution">Execução</span><h3 data-en="Web executor">Executor web</h3><p data-en="Works on screen like a careful tester at the keyboard.">Trabalha na tela como uma testadora cuidadosa no teclado.</p></div></article>
+        <article class="agent g reveal"><span class="ag-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 4l12 8-12 8z"/></svg></span><div><span class="role" data-en="Execution">Execução</span><h3 data-en="Step runner">Executor de passos</h3><p data-en="Validates each step by exploring the screen, data and API.">Valida cada passo explorando tela, dados e API.</p></div></article>
+        <article class="agent w reveal"><span class="ag-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="8" y="7" width="8" height="12" rx="4"/><path d="M12 7V5M9.5 4.5 10.5 7M14.5 4.5 13.5 7M4 11h4M16 11h4M4 16h4M16 16h4"/></svg></span><div><span class="role" data-en="Failures">Falhas</span><h3 data-en="Defect analyst">Analista de defeitos</h3><p data-en="Investigates a failure to a verdict, then drafts the report.">Investiga uma falha até o veredito e depois rascunha o relato.</p></div></article>
+        <article class="agent v reveal"><span class="ag-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/></svg></span><div><span class="role" data-en="Automation">Automação</span><h3>Automation Engineer</h3><p data-en="Writes and fixes Playwright tests from verified routes.">Escreve e corrige testes Playwright a partir de caminhos verificados.</p></div></article>
+        <article class="agent a reveal"><span class="ag-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zM5 18a2 2 0 0 1 2-2h12"/></svg></span><div><span class="role" data-en="Knowledge">Conhecimento</span><h3 data-en="Domain learner">Aprendiz do domínio</h3><p data-en="Understands how an application works, then how to validate it.">Entende como uma aplicação funciona e depois como validá-la.</p></div></article>
+        <article class="agent a reveal"><span class="ag-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6z"/><path d="m9 12 2 2 4-4"/></svg></span><div><span class="role" data-en="Knowledge">Conhecimento</span><h3 data-en="Memory auditor">Auditor da memória</h3><p data-en="Finds stale or conflicting knowledge for the team to review.">Encontra conhecimento velho ou conflitante para o time revisar.</p></div></article>
+        <article class="agent v reveal"><span class="ag-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></span><div><span class="role" data-en="Team">Time</span><h3 data-en="Translator">Tradutor</h3><p data-en="Writes what goes to the tracker in your team's language.">Escreve o que vai para o tracker no idioma do seu time.</p></div></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · Connections -->
+  <section class="block">
+    <div class="wrap">
+      <div class="head reveal">
+        <span class="eyebrow" data-en="Connections">Conexões</span>
+        <h2 data-en="Works with what <em>your team already uses</em>">Conecta com o que <em>o seu time já usa</em></h2>
+      </div>
+      <div class="logos reveal">
+        <div class="logo"><i style="background:#0078d4">AD</i><span>Azure DevOps<small data-en="items, PRs, test plans">itens, PRs, test plans</small></span></div>
+        <div class="logo"><i style="background:#2684ff">J</i><span>Jira<small data-en="items and comments">itens e comentários</small></span></div>
+        <div class="logo"><i style="background:#2ead33">PW</i><span>Playwright<small data-en="automated tests">testes automatizados</small></span></div>
+        <div class="logo"><i style="background:#db4437">C</i><span>Google Chrome<small data-en="screen tests">testes de tela</small></span></div>
+        <div class="logo"><i style="background:#a91d22">SQL</i><span>SQL Server<small data-en="read only">só leitura</small></span></div>
+        <div class="logo"><i style="background:#13aa52">M</i><span>MongoDB<small data-en="read only">só leitura</small></span></div>
+        <div class="logo"><i style="background:#29b5e8">S</i><span>Snowflake<small data-en="read only">só leitura</small></span></div>
+        <div class="logo"><i style="background:#0062ad">ST</i><span>Azure Storage<small data-en="files and logs">arquivos e logs</small></span></div>
+        <div class="logo"><i style="background:#27a7e7">T</i><span>Telegram<small data-en="approve from the phone">aprovar pelo celular</small></span></div>
+        <div class="logo"><i style="background:#25d366">W</i><span>WhatsApp<small data-en="voice notes">mensagens de voz</small></span></div>
+        <div class="logo"><i style="background:#ea4335">G</i><span>Gmail<small data-en="send on your click">envio no seu clique</small></span></div>
+        <div class="logo"><i style="background:#3b3b46">11</i><span>ElevenLabs<small data-en="Syl's voice">a voz da Syl</small></span></div>
+        <div class="logo"><i style="background:#6b5cff">MCP</i><span data-en="Your MCPs<small>tools you enable</small>">Seus MCPs<small>ferramentas que você liberar</small></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · Engines -->
+  <section class="block">
+    <div class="wrap">
+      <div class="head reveal">
+        <span class="eyebrow" data-en="AI engines">Motores de IA</span>
+        <h2 data-en="One Syl. <em>The AI subscription you already have.</em>">Uma Syl. <em>A assinatura de IA que vocês já têm.</em></h2>
+        <p data-en="Pick the engine in Settings. Syl gives each task the right model by herself.">Escolha o motor nas Configurações. A Syl distribui o modelo certo para cada tarefa sozinha.</p>
+      </div>
+      <div class="engines">
+        <article class="engine reveal"><span class="mark" style="background:#d97757">C</span><h3>Claude Code</h3><p data-en="With your Claude Pro or Max login.">Com o seu login do Claude Pro ou Max.</p><span class="chip a" data-en="default">padrão</span></article>
+        <article class="engine reveal"><span class="mark" style="background:#2b2d33;border:1px solid var(--line-strong)">⌘</span><h3>Codex</h3><p data-en="With your ChatGPT subscription.">Com a sua assinatura do ChatGPT.</p><span class="chip" data-en="ChatGPT login">login do ChatGPT</span></article>
+        <article class="engine reveal"><span class="mark" style="background:#6e40c9">GH</span><h3>GitHub Copilot</h3><p data-en="With an active Copilot license, personal or from your company.">Com uma licença ativa do Copilot, pessoal ou da empresa.</p><span class="chip v" data-en="Copilot license">licença Copilot</span></article>
+      </div>
+      <p class="note" data-en="No API key: Syl checks every call and refuses to run on one.">Sem chave de API: a Syl confere cada chamada e se recusa a rodar com uma.</p>
+    </div>
+  </section>
+
+  <!-- 8 · Comparison -->
+  <section class="block">
+    <div class="wrap">
+      <div class="head reveal">
+        <span class="eyebrow" data-en="Comparison">Comparação</span>
+        <h2 data-en="Syl and a generic AI chat">A Syl e um chat de IA genérico</h2>
+      </div>
+      <div class="reveal" style="overflow-x:auto">
+        <table class="compare">
+          <thead><tr><th></th><th class="syl">Syl</th><th data-en="Generic AI chat">Chat de IA genérico</th></tr></thead>
+          <tbody>
+            <tr><td data-en="Follows your tracker by herself">Acompanha o seu tracker sozinha</td><td class="syl"><span class="yes" data-en="Yes">Sim</span></td><td><span class="no-mark" data-en="No">Não</span></td></tr>
+            <tr><td data-en="Remembers each application's rules">Lembra das regras de cada aplicação</td><td class="syl"><span class="yes" data-en="Yes">Sim</span></td><td><span class="part" data-en="Within a chat">Dentro de um chat</span></td></tr>
+            <tr><td data-en="Reads the linked pull request's code">Lê o código do PR vinculado</td><td class="syl"><span class="yes" data-en="Yes">Sim</span></td><td><span class="part" data-en="If you paste it">Se você colar</span></td></tr>
+            <tr><td data-en="Runs in QA: screen, database and API">Executa no QA: tela, banco e API</td><td class="syl"><span class="yes" data-en="Yes">Sim</span></td><td><span class="no-mark" data-en="No">Não</span></td></tr>
+            <tr><td data-en="Writes in your team's case template">Escreve no modelo de casos do seu time</td><td class="syl"><span class="yes" data-en="Yes">Sim</span></td><td><span class="part" data-en="If you explain it">Se você explicar</span></td></tr>
+            <tr><td data-en="Asks before saving anything">Pede aprovação antes de gravar</td><td class="syl"><span class="yes" data-en="Always">Sempre</span></td><td><span class="no-mark" data-en="Not applicable">Não se aplica</span></td></tr>
+            <tr><td data-en="Data on your computer">Dados no seu computador</td><td class="syl"><span class="yes" data-en="Yes">Sim</span></td><td><span class="no-mark" data-en="In the cloud">Na nuvem</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · Capabilities -->
+  <section class="block" id="faz">
+    <div class="wrap">
+      <div class="head reveal">
+        <span class="eyebrow" data-en="What she does">O que ela faz</span>
+        <h2 data-en="Far more than reading an item <em>and writing cases</em>">Muito além de ler um item <em>e gerar casos</em></h2>
+        <p data-en="Everything a QA engineer does in a sprint, in one teammate — from the first criterion to the automated test.">Tudo o que uma QA Engineer faz numa sprint, numa colega só — do primeiro critério ao teste automatizado.</p>
+      </div>
+      <div class="stats reveal">
+        <div><b>27</b><span data-en="specialist agents">agentes especialistas</span></div>
+        <div><b>56</b><span data-en="tools in the conversation">ferramentas na conversa</span></div>
+        <div><b>3</b><span data-en="AI engines">motores de IA</span></div>
+        <div><b>13</b><span data-en="connections">conexões</span></div>
+      </div>
+      <div class="capx-grid">
+        <article class="capx a reveal">
+          <div class="capx-top"><span class="capx-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5z"/><path d="M15 3v4h4"/><circle cx="11" cy="13" r="3"/><path d="m13.2 15.2 2.3 2.3"/></svg></span><span class="capx-cat" data-en="Understand">Entender</span></div>
+          <h3 data-en="Understands the story before you test">Entende a história antes de você testar</h3>
+          <ul><li data-en="Reads criteria, comments, attachments and the PR's code">Lê critérios, comentários, anexos e o código do PR</li><li data-en="Points out contradictions and what is missing to test">Aponta contradições e o que falta para testar</li><li data-en="Sends the questions to the PO on the ticket and reads the answer">Manda as perguntas ao PO no ticket e lê a resposta</li><li data-en="When the story changes, redoes only what it affects">Quando a história muda, refaz só o que foi afetado</li></ul>
+          <p class="capx-ask"><b data-en="Ask:">Peça:</b> <span data-en="“What is missing in 4812 before testing?”">“O que falta na 4812 antes de testar?”</span></p>
+        </article>
+        <article class="capx g reveal">
+          <div class="capx-top"><span class="capx-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></svg></span><span class="capx-cat" data-en="Write">Escrever</span></div>
+          <h3 data-en="Writes the cases your team's way">Escreve os casos do jeito do seu time</h3>
+          <ul><li data-en="In your templates: web, API, mobile, database, Gherkin">No modelo de vocês: web, API, mobile, banco, Gherkin</li><li data-en="Covers every criterion, with data and expected result">Cobre cada critério, com dados e resultado esperado</li><li data-en="Adjusted by talking; you apply or undo">Ajusta conversando; você aplica ou desfaz</li><li data-en="Sends to Test Plans without duplicating anything">Envia ao Test Plans sem duplicar nada</li></ul>
+          <p class="capx-ask"><b data-en="Ask:">Peça:</b> <span data-en="“Add a case for an expired coupon”">“Adiciona um caso para cupom vencido”</span></p>
+        </article>
+        <article class="capx g reveal">
+          <div class="capx-top"><span class="capx-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 8h18M10 11l4 2.5-4 2.5z"/></svg></span><span class="capx-cat" data-en="Run">Executar</span></div>
+          <h3 data-en="Tests in the QA environment, with evidence">Testa no ambiente de QA, com evidência</h3>
+          <ul><li data-en="Validates the story criterion by criterion">Valida a história critério por critério</li><li data-en="On screen, in the database, API, storage and logs">Na tela, no banco, na API, no storage e nos logs</li><li data-en="Runs a Test Case by number or a regression by tag">Roda um Test Case pelo número ou uma regressão por tag</li><li data-en="Records the results in Test Plans">Registra os resultados no Test Plans</li></ul>
+          <p class="capx-ask"><b data-en="Ask:">Peça:</b> <span data-en="“Validate 4812 for me”">“Valida a 4812 para mim”</span></p>
+        </article>
+        <article class="capx w reveal">
+          <div class="capx-top"><span class="capx-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="8" y="7" width="8" height="12" rx="4"/><path d="M12 7V5M9.5 4.5 10.5 7M14.5 4.5 13.5 7M4 11h4M16 11h4M4 16h4M16 16h4"/></svg></span><span class="capx-cat" data-en="Investigate">Investigar</span></div>
+          <h3 data-en="Investigates the failure before opening a bug">Investiga a falha antes de abrir bug</h3>
+          <ul><li data-en="Product, test, environment, data or intermittent">Produto, teste, ambiente, dados ou intermitente</li><li data-en="Rules out hypotheses with evidence">Descarta hipóteses com evidência</li><li data-en="Drafts the defect with steps, data and screenshots">Rascunha o defeito com passos, dados e prints</li><li data-en="Creates the Bug or comments on your click">Cria o Bug ou comenta no item no seu clique</li></ul>
+          <p class="capx-ask"><b data-en="Ask:">Peça:</b> <span data-en="“Is this a bug or our data?”">“Isso é bug ou é dado nosso?”</span></p>
+        </article>
+        <article class="capx v reveal">
+          <div class="capx-top"><span class="capx-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/></svg></span><span class="capx-cat" data-en="Automate">Automatizar</span></div>
+          <h3 data-en="Turns what she verified into automation">Transforma o que verificou em automação</h3>
+          <ul><li data-en="A passed mission becomes a Test Case">Uma missão aprovada vira Test Case</li><li data-en="Then a Playwright test in your repository">E depois um teste Playwright no seu repositório</li><li data-en="Runs it to prove it works; you review the diff">Roda para provar que funciona; você revisa o diff</li><li data-en="Runs the automated suite and fixes broken tests">Roda a suíte automatizada e corrige teste quebrado</li></ul>
+          <p class="capx-ask"><b data-en="Ask:">Peça:</b> <span data-en="“Turn this mission into an automated test”">“Transforma essa missão em teste automatizado”</span></p>
+        </article>
+        <article class="capx a reveal">
+          <div class="capx-top"><span class="capx-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span><span class="capx-cat" data-en="Report">Relatar</span></div>
+          <h3 data-en="Shows progress without you writing reports">Mostra o andamento sem você escrever relatório</h3>
+          <ul><li data-en="Status per case and coverage per criterion">Status por caso e cobertura por critério</li><li data-en="Comments on the ticket or saves to the wiki">Comenta no ticket ou salva na wiki</li><li data-en="Today: where to start the day">Hoje: por onde começar o dia</li><li data-en="Daily summary in the panel and on Telegram">Resumo diário no painel e no Telegram</li></ul>
+          <p class="capx-ask"><b data-en="Ask:">Peça:</b> <span data-en="“Comment the test report on the story”">“Comenta o relatório de testes na história”</span></p>
+        </article>
+        <article class="capx a reveal">
+          <div class="capx-top"><span class="capx-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2zM5 18a2 2 0 0 1 2-2h12"/></svg></span><span class="capx-cat" data-en="Remember and teach">Lembrar e ensinar</span></div>
+          <h3 data-en="Remembers the product and teaches newcomers">Lembra do produto e ensina quem chega</h3>
+          <ul><li data-en="One note per application, with the confirmed rules">Uma nota por aplicação, com as regras confirmadas</li><li data-en="Searches by meaning across stories, rules and specs">Busca por significado entre histórias, regras e specs</li><li data-en="Teaches a story or pair tests with you">Ensina uma história ou faz pair testing</li><li data-en="Procedures become reusable Skills">Procedimentos viram Skills reutilizáveis</li></ul>
+          <p class="capx-ask"><b data-en="Ask:">Peça:</b> <span data-en="“Teach me how to test the refund flow”">“Me ensina a testar o fluxo de estorno”</span></p>
+        </article>
+        <article class="capx v reveal">
+          <div class="capx-top"><span class="capx-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 17l6-5-6-5M12 19h8"/></svg></span><span class="capx-cat" data-en="In your workspace">No seu ambiente</span></div>
+          <h3 data-en="Uses the tools you already use">Usa as ferramentas que você já usa</h3>
+          <ul><li data-en="Your terminal, with your sign-ins (az, kubectl, psql…)">Seu terminal, com seus logins (az, kubectl, psql…)</li><li data-en="Your MCP servers and the folders you allow">Seus servidores MCP e as pastas que você liberar</li><li data-en="Azure DevOps pipelines and the log of what failed">Pipelines do Azure DevOps e o log do que falhou</li><li data-en="What changes something becomes a card you approve">O que muda algo vira cartão para você aprovar</li></ul>
+          <p class="capx-ask"><b data-en="Ask:">Peça:</b> <span data-en="“Did the last deploy to QA pass?”">“O último deploy no QA passou?”</span></p>
+        </article>
+      </div>
+      <div class="capx-strip reveal">
+        <span data-en="And she talks with you wherever you are:">E ela fala com você onde você estiver:</span>
+        <span class="chip a" data-en="Panel">Painel</span><span class="chip a" data-en="Voice, in her own voice">Voz, na voz dela</span><span class="chip a">Telegram</span><span class="chip a" data-en="Your phone">Seu celular</span><span class="chip a" data-en="Terminal">Terminal</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 · Install -->
+  <section class="block" id="instalar">
+    <div class="wrap">
+      <div class="head reveal">
+        <span class="eyebrow" data-en="Try Syl">Teste a Syl</span>
+        <h2 data-en="About ten minutes, <em>on your computer</em>">Uns dez minutos, <em>no seu computador</em></h2>
+        <p data-en="Each person installs their own Syl with their own subscription. She starts knowing nothing about your project and learns from it.">Cada pessoa instala a própria Syl, com a própria assinatura. Ela começa sem conhecer o seu projeto e aprende com ele.</p>
+      </div>
+      <div class="beta reveal">
+        <div>
+          <span class="pill" data-en="Closed testing phase">Fase de testes fechada</span>
+          <h3 data-en="We are opening Syl to a few QA teams at a time">Estamos abrindo a Syl para poucos times de QA por vez</h3>
+          <p data-en="So we can follow each installation closely and shape Syl with the people who really use her. Want to try her with your team? Send Nathan, Syl's creator, a message on LinkedIn telling where you work, which tracker you use (Azure DevOps or Jira) and how you test today.">Assim acompanhamos cada instalação de perto e evoluímos a Syl com quem usa de verdade. Quer testar com o seu time? Mande uma mensagem para o Nathan, criador da Syl, no LinkedIn, contando onde você trabalha, qual tracker vocês usam (Azure DevOps ou Jira) e como testam hoje.</p>
+        </div>
+        <a class="btn li" href="https://www.linkedin.com/in/araujosnathan/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg><span data-en="Ask for access on LinkedIn">Pedir acesso no LinkedIn</span></a>
+      </div>
+      <div class="steps">
+        <article class="step reveal">
+          <span class="n">01</span>
+          <h3 data-en="Get access and install">Peça acesso e instale</h3>
+          <p data-en="Once your access is granted through <a href='https://www.linkedin.com/in/araujosnathan/' target='_blank' rel='noopener'>LinkedIn</a>, you receive the latest <code>syl-&amp;lt;version&amp;gt;.tgz</code>. In the folder where it is:">Com o acesso liberado pelo <a href="https://www.linkedin.com/in/araujosnathan/" target="_blank" rel="noopener">LinkedIn</a>, você recebe o <code>syl-&lt;versão&gt;.tgz</code> mais recente. Na pasta onde ele está:</p>
+          <div class="cmd" data-copy="npm install -g ./syl-<versão>.tgz" data-copy-en="npm install -g ./syl-<version>.tgz"><span data-en="npm install -g <span class='nb'>./syl-&amp;lt;version&amp;gt;.tgz</span>">npm install -g <span class="nb">./syl-&lt;versão&gt;.tgz</span></span><button type="button" data-en="Copy">Copiar</button></div>
+        </article>
+        <article class="step reveal">
+          <span class="n">02</span>
+          <h3 data-en="Run the install">Rode a instalação</h3>
+          <p data-en="Creates the data folder, connects your AI engine in the browser, starts Syl at login and opens the panel.">Cria a pasta de dados, conecta o seu motor de IA pelo navegador, deixa a Syl iniciando no login e abre o painel.</p>
+          <div class="cmd" data-copy="syl install"><span>syl install</span><button type="button" data-en="Copy">Copiar</button></div>
+        </article>
+        <article class="step reveal">
+          <span class="n">03</span>
+          <h3 data-en="Connect your project">Conecte o seu projeto</h3>
+          <p data-en="In Settings › Projects, connect Azure DevOps or Jira, choose the scope and the states that trigger the analysis. From there she follows by herself.">Em Configurações › Projetos, conecte o Azure DevOps ou o Jira, escolha o escopo e os estados que disparam a análise. Daí em diante ela acompanha sozinha.</p>
+          <div class="cmd plain"><span data-en="Settings › Projects">Configurações › Projetos</span></div>
+        </article>
+      </div>
+      <div class="req reveal">
+        <span><b>macOS</b> <span data-en="or">ou</span> <b>Windows 10/11</b></span>
+        <span><b>Node.js 22+</b></span>
+        <span><b>Git</b></span>
+        <span><b data-en="An AI subscription">Uma assinatura de IA</b></span>
+        <span><b>Google Chrome</b> <span data-en="for screen tests">para testes de tela</span></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 · Guarantees -->
+  <section class="block" id="garantias">
+    <div class="wrap">
+      <h2 class="motto reveal"><span data-en="The AI proposes.">A IA propõe.</span><span data-en="The code decides.">O código decide.</span><span data-en="You confirm.">Você confirma.</span></h2>
+      <div class="guards">
+        <article class="guard reveal"><h3 data-en="Production">Produção</h3><p data-en="Read only, locked by the code: the browser does not type or fill, and the API only accepts GET.">Só leitura, travada pelo código: o navegador não digita nem preenche, e a API aceita só GET.</p></article>
+        <article class="guard reveal"><h3 data-en="Databases">Bancos</h3><p data-en="Always read only. A write becomes a proposed command, never run.">Sempre só leitura. Uma escrita vira um comando proposto, nunca executado.</p></article>
+        <article class="guard reveal"><h3 data-en="Passwords">Senhas</h3><p data-en="Kept in the system's keychain and typed by the code. The model never sees them.">Ficam no cofre do sistema e são digitadas pelo código. O modelo nunca as vê.</p></article>
+        <article class="guard reveal"><h3 data-en="Changes">Mudanças</h3><p data-en="Creating a bug, sending a test case or closing a mission only happens on your click.">Criar um bug, enviar um caso de teste ou encerrar uma missão só acontece no seu clique.</p></article>
+        <article class="guard reveal"><h3 data-en="Subscription">Assinatura</h3><p data-en="Uses your Claude, ChatGPT or Copilot login. Refuses to run on an API key.">Usa o seu login do Claude, ChatGPT ou Copilot. Recusa rodar com chave de API.</p></article>
+        <article class="guard reveal"><h3 data-en="Your data">Seus dados</h3><p data-en="Everything stays on your computer: memory, evidence and conversations.">Tudo fica no seu computador: memória, evidências e conversas.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 · FAQ -->
+  <section class="block">
+    <div class="wrap">
+      <div class="head reveal">
+        <span class="eyebrow" data-en="Questions">Perguntas</span>
+        <h2 data-en="Frequently asked questions">Perguntas frequentes</h2>
+      </div>
+      <div class="faq reveal">
+        <details><summary data-en="How much does it cost?">Quanto custa?</summary><p data-en="Syl has no plan of her own: she uses the AI subscription you already have (Claude, ChatGPT or Copilot). There is no API cost.">A Syl não tem plano próprio: ela usa a assinatura de IA que você já tem (Claude, ChatGPT ou Copilot). Não há custo de API.</p></details>
+        <details><summary data-en="How can I try Syl?">Como faço para testar a Syl?</summary><p data-en="Syl is in a closed testing phase, open to a few teams at a time. Send Nathan, Syl's creator, a message on <a href='https://www.linkedin.com/in/araujosnathan/' target='_blank' rel='noopener'>LinkedIn</a> telling where you work, which tracker your team uses and how you test today. Once access is granted, you get the package and help with the installation.">A Syl está em fase de testes fechada, aberta para poucos times por vez. Mande uma mensagem para o Nathan, criador da Syl, no <a href="https://www.linkedin.com/in/araujosnathan/" target="_blank" rel="noopener">LinkedIn</a>, contando onde você trabalha, qual tracker o time usa e como vocês testam hoje. Com o acesso liberado, você recebe o pacote e ajuda na instalação.</p></details>
+        <details><summary data-en="Does it work with Jira?">Funciona com o Jira?</summary><p data-en="Yes. Syl follows items in Azure DevOps or Jira; Azure Test Plans is also supported to send the test cases.">Sim. A Syl acompanha itens do Azure DevOps ou do Jira; o Azure Test Plans também é suportado para enviar os casos de teste.</p></details>
+        <details><summary data-en="Where do my data go?">Para onde vão os meus dados?</summary><p data-en="Memory, evidence and conversations stay on your computer. What goes out is only what the AI engine needs for each task, through your own subscription.">Memória, evidências e conversas ficam no seu computador. O que sai é só o que o motor de IA precisa para cada tarefa, pela sua própria assinatura.</p></details>
+        <details><summary data-en="Can she change something without me seeing?">Ela pode mudar algo sem eu ver?</summary><p data-en="No. Anything that changes the tracker, a test plan or a mission's result waits for your click on a card. Production and databases are read only by code.">Não. Tudo que muda o tracker, um test plan ou o resultado de uma missão espera o seu clique num cartão. Produção e bancos são só leitura, pelo código.</p></details>
+        <details><summary data-en="Does she replace the QA?">Ela substitui a QA?</summary><p data-en="No. She takes the repetitive reading and writing so the QA spends time on what needs judgment: exploring, deciding, talking to the team.">Não. Ela tira a leitura e a escrita repetitivas para a QA gastar tempo no que pede julgamento: explorar, decidir, conversar com o time.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13 · Closing -->
+  <section class="closing">
+    <div class="wrap">
+      <div class="core reveal" aria-hidden="true"><span class="halo"></span><span class="arc"></span><img src="assets/syl-mark-dark.png" alt=""></div>
+      <h2 class="reveal" data-en="Put Syl to work <br>in your next sprint">Coloque a Syl para trabalhar <br>na sua próxima sprint</h2>
+      <p class="reveal" data-en="Syl is in a closed testing phase. If you want her working with your team, talk to Nathan on LinkedIn: access is granted a few teams at a time.">A Syl está em fase de testes fechada. Se você quer ela trabalhando com o seu time, fale com o Nathan no LinkedIn: o acesso é liberado para poucos times por vez.</p>
+      <div class="hero-actions reveal">
+        <a class="btn li" href="https://www.linkedin.com/in/araujosnathan/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg><span data-en="Ask for access on LinkedIn">Pedir acesso no LinkedIn</span></a>
+        <a class="btn" href="#instalar" data-en="See how to install">Ver como instalar</a>
+      </div>
+      <small class="reveal" data-en="Closed testing phase · access by conversation">Fase de testes fechada · acesso por conversa</small>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="#top"><img src="assets/syl-mark-dark.png" alt=""><span>Syl</span></a>
+    <span data-en="The QA engineer who works with your team.">A engenheira de QA que trabalha com o seu time.</span>
+    <a href="https://github.com/CovvenStudio/syl-super-agent">CovvenStudio/syl-super-agent</a>
+  </div>
+</footer>
+
+<script>
+/* The hero's sky: Syl's constellation from the immersive mode (VoiceStage), for the page. */
+(function () {
+  var canvas = document.getElementById("sky"), box = document.getElementById("hero-sky");
+  if (!canvas || !canvas.getContext) return;
+  var g = canvas.getContext("2d");
+  var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var small = innerWidth < 760, count = small ? 420 : 760, linked = small ? 90 : 170;
+  var pts = [];
+  for (var i = 0; i < count; i++) {
+    var y = 1 - (i / (count - 1)) * 2, r = Math.sqrt(1 - y * y), t = i * 2.399963 + Math.random() * .3, k = .82 + Math.random() * .3;
+    pts.push({ x: Math.cos(t) * r * k, y: y * k, z: Math.sin(t) * r * k, tw: Math.random() * 6.28, delay: Math.random(), b: 0, tx: 0, ty: 0, sx: 0, sy: 0 });
+  }
+  var link = []; for (var j = 0; j < count; j++) if (j % Math.ceil(count / linked) === 0) link.push(j);
+  var w = 0, h = 0, dpr = 1, angle = 0, last = 0, visible = true, frame = 0;
+  var sparks = [], owed = 0, flash = new Float64Array(link.length).fill(-1e9);
+  var word = null, nextWord = 3500, words = ["Syl", "QA"], wi = 0;
+  function resize() { dpr = Math.min(2, devicePixelRatio || 1); w = canvas.clientWidth; h = canvas.clientHeight; canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); g.setTransform(dpr, 0, 0, dpr, 0, 0); }
+  resize(); addEventListener("resize", resize);
+  function ease(x) { return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+  function col(a, bright) { bright = bright || 0; return "rgba(" + Math.round(120 + bright * 100) + "," + Math.round(220 + bright * 25) + ",255," + a + ")"; }
+  function wordPoints(text, cx, cy, want) {
+    var c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h));
+    var x = c.getContext("2d", { willReadFrequently: true }); var size = Math.min(h * .42, 230);
+    x.font = "800 " + size + "px Inter, system-ui, sans-serif";
+    var mw = x.measureText(text).width; if (mw > w * .8) { size *= w * .8 / mw; x.font = "800 " + size + "px Inter, system-ui, sans-serif"; }
+    x.textAlign = "center"; x.textBaseline = "middle"; x.fillStyle = "#fff"; x.fillText(text, cx, cy);
+    var d = x.getImageData(0, 0, c.width, c.height).data, ink = 0;
+    for (var q = 3; q < d.length; q += 16) if (d[q] > 128) ink++;
+    var step = Math.max(2, Math.round(Math.sqrt(ink * 4 / Math.max(1, want)))), out = [];
+    for (var yy = 0; yy < c.height; yy += step) for (var xx = 0; xx < c.width; xx += step) if (d[(yy * c.width + xx) * 4 + 3] > 128) out.push([xx + (Math.random() - .5) * step * .6, yy + (Math.random() - .5) * step * .6]);
+    for (var n = out.length - 1; n > 0; n--) { var m = Math.floor(Math.random() * (n + 1)), tmp = out[n]; out[n] = out[m]; out[m] = tmp; }
+    return out;
+  }
+  if ("IntersectionObserver" in window) new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible && !frame) frame = requestAnimationFrame(draw); }, {}).observe(canvas);
+  function draw(t) {
+    frame = 0;
+    if (!visible || document.hidden) return;
+    var dt = last ? Math.min(64, t - last) : 16; last = t;
+    var cx = w / 2, cy = h / 2;
+    // Every few seconds the stars leave the sphere and write a word, then go back.
+    if (!reduce) {
+      nextWord -= dt;
+      if (!word && nextWord <= 0) { var target = wordPoints(words[wi++ % words.length], cx, cy, count); if (target.length) { pts.forEach(function (p, i) { p.tx = target[i % target.length][0]; p.ty = target[i % target.length][1]; }); word = { at: t, out: null }; box.classList.add("word"); } }
+      if (word && word.out === null && t - word.at > 3000) { word.out = t; box.classList.remove("word"); }
+    }
+    angle += reduce ? 0 : .00026 * dt;
+    var pulse = reduce ? 0 : .1 + .06 * Math.sin(t / 300);
+    g.clearRect(0, 0, w, h);
+    var R = Math.min(w * .4, h * .36, 360) * (1 + pulse * .12);
+    var ca = Math.cos(angle), sa = Math.sin(angle), ct = Math.cos(.32), st = Math.sin(.32), mean = 0;
+    pts.forEach(function (p) {
+      var b = 0;
+      if (word) { var lag = p.delay * 380; b = word.out === null ? ease(Math.min(1, Math.max(0, (t - word.at - lag) / 850))) : 1 - ease(Math.min(1, Math.max(0, (t - word.out - lag * .6) / 900))); }
+      p.b = b; mean += b;
+    });
+    mean /= pts.length;
+    if (word && word.out !== null && mean < .002) { word = null; nextWord = 7000; }
+    var proj = pts.map(function (p) {
+      var x = p.x * ca - p.z * sa, z1 = p.x * sa + p.z * ca, y = p.y * ct - z1 * st, z = p.y * st + z1 * ct, f = 2.6 / (2.6 + z);
+      var sx = cx + x * R * f, sy = cy + y * R * f;
+      var jx = Math.sin(t / 700 + p.tw) * 1.2, jy = Math.cos(t / 800 + p.tw) * 1.2;
+      p.sx = sx + (p.tx + jx - sx) * p.b; p.sy = sy + (p.ty + jy - sy) * p.b;
+      return { sx: p.sx, sy: p.sy, z: z, tw: p.tw, b: p.b };
+    });
+    g.lineWidth = 1;
+    for (var o = 0; o < 3; o++) { g.strokeStyle = col((.08 + pulse * .08) * (1 - mean)); g.beginPath(); g.ellipse(cx, cy, R * (1.15 + o * .22), R * (.34 + o * .07), angle * (o % 2 ? -1 : 1) * .6, 0, Math.PI * 2); g.stroke(); }
+    var max = Math.pow(R * .42, 2), lp = link.map(function (i) { return proj[i]; }), nb = lp.map(function () { return []; });
+    for (var a1 = 0; a1 < lp.length; a1++) {
+      var A = lp[a1];
+      for (var b1 = a1 + 1; b1 < lp.length; b1++) {
+        var B = lp[b1], dd = Math.pow(A.sx - B.sx, 2) + Math.pow(A.sy - B.sy, 2);
+        if (dd > max) continue;
+        nb[a1].push(b1); nb[b1].push(a1);
+        var fade = 1 - Math.max(A.b, B.b); if (fade <= .02) continue;
+        g.strokeStyle = col((1 - dd / max) * (.08 + (2 - A.z - B.z) / 4 * .18 + pulse * .25) * fade);
+        g.beginPath(); g.moveTo(A.sx, A.sy); g.lineTo(B.sx, B.sy); g.stroke();
+      }
+    }
+    // Synapses: sparks run along the lines and hop from star to star.
+    var rate = reduce || mean > .05 ? 0 : 3.2;
+    owed = Math.min(3, owed + rate * dt / 1000);
+    function hop(from, prev, at) { var next = nb[from].filter(function (x) { return x !== prev; }); if (!next.length) return null; var to = next[Math.floor(Math.random() * next.length)]; next.forEach(function (x) { if (lp[x].z + Math.random() * .6 < lp[to].z + Math.random() * .6) to = x; }); return { from: from, to: to, at: at, dur: 260 + Math.random() * 220, hops: 0 }; }
+    while (owed >= 1 && sparks.length < 26) { owed -= 1; for (var tr = 0; tr < 6; tr++) { var s0 = Math.floor(Math.random() * lp.length); if (lp[s0].z > .15 || !nb[s0].length) continue; var sp = hop(s0, -1, t); if (sp) { sp.hops = 3 + Math.floor(Math.random() * 4); sparks.push(sp); flash[s0] = t; } break; } }
+    if (rate === 0) sparks = [];
+    var keep = [];
+    sparks.forEach(function (sp) {
+      var cur = sp;
+      while (cur && t - cur.at >= cur.dur) { flash[cur.to] = cur.at + cur.dur; var left = cur.hops - 1, n = left > 0 ? hop(cur.to, cur.from, cur.at + cur.dur) : null; if (n) n.hops = left; cur = n; }
+      if (!cur) return;
+      keep.push(cur);
+      var P = lp[cur.from], Q = lp[cur.to];
+      if (Math.pow(P.sx - Q.sx, 2) + Math.pow(P.sy - Q.sy, 2) > max * 1.4) return;
+      var k2 = Math.max(0, Math.min(1, (t - cur.at) / cur.dur)), tail = Math.max(0, k2 - .45);
+      var hx = P.sx + (Q.sx - P.sx) * k2, hy = P.sy + (Q.sy - P.sy) * k2, lx = P.sx + (Q.sx - P.sx) * tail, ly = P.sy + (Q.sy - P.sy) * tail, depth = (2 - P.z - Q.z) / 4;
+      var grad = g.createLinearGradient(lx, ly, hx, hy); grad.addColorStop(0, col(0)); grad.addColorStop(1, col(.55 + depth * .4, 1));
+      g.strokeStyle = grad; g.lineWidth = 1.6; g.beginPath(); g.moveTo(lx, ly); g.lineTo(hx, hy); g.stroke();
+      g.fillStyle = col(.9, 1); g.shadowColor = col(.9, 1); g.shadowBlur = 10; g.beginPath(); g.arc(hx, hy, 1.6 + depth, 0, 6.283); g.fill(); g.shadowBlur = 0;
+    });
+    sparks = keep; g.lineWidth = 1;
+    for (var f2 = 0; f2 < lp.length; f2++) { var age = t - flash[f2]; if (age < 0 || age > 520) continue; var L = lp[f2], fr = 1 - age / 520, gl = g.createRadialGradient(L.sx, L.sy, 0, L.sx, L.sy, 9); gl.addColorStop(0, col(.7 * fr * (1 - mean), 1)); gl.addColorStop(1, col(0)); g.fillStyle = gl; g.beginPath(); g.arc(L.sx, L.sy, 9, 0, 6.283); g.fill(); }
+    proj.forEach(function (p) {
+      var depth = (1 - p.z) / 2, tw = reduce ? 1 : .7 + .3 * Math.sin(t / 600 + p.tw);
+      g.fillStyle = col(((.25 + depth * .65) * (1 - p.b) + .95 * p.b) * tw, p.b);
+      g.beginPath(); g.arc(p.sx, p.sy, (.6 + depth * 1.4 + pulse * 1.2) * (1 - p.b) + 1.7 * p.b, 0, 6.283); g.fill();
+    });
+    if (!reduce) frame = requestAnimationFrame(draw);
+  }
+  frame = requestAnimationFrame(draw);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && !frame) frame = requestAnimationFrame(draw); });
+})();
+
+/* The Memory map and the Syl Brain, rebuilt with made-up applications and Syl's real agents. */
+(function () {
+  var NS = "http://www.w3.org/2000/svg";
+  var still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function el(tag, attrs, parent) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+  function en() { return /^en/.test(document.documentElement.lang); }
+  function T(pair) { return en() ? pair[1] : pair[0]; }
+  function watch(node, cb) { if (!node) return; if (!("IntersectionObserver" in window)) { cb(true); return; } new IntersectionObserver(function (es) { cb(es[0].isIntersecting); }, { threshold: 0.15 }).observe(node); }
+  var hooks = window.__langHooks = window.__langHooks || [];
+
+  /* ---------- Memory: the map of the applications ---------- */
+  var mem = document.getElementById("mem-svg");
+  if (mem) {
+    var C = { x: 400, y: 255 };
+    var APPS = [
+      { n: "Checkout", x: 400, y: 92, lines: 48, week: true, meta: ["6 itens · lida 3× · aprendeu hoje", "6 items · read 3× · learned today"], fact: ["um cupom por cliente, por mês", "one coupon per customer, per month"] },
+      { n: "Payments Gateway", x: 612, y: 145, lines: 41, week: true, meta: ["4 itens · lida 2×", "4 items · read 2×"], fact: ["CVV inválido é recusado em até 2 s", "an invalid CVV is refused within 2 s"] },
+      { n: "Coupons Service", x: 660, y: 300, lines: 37, week: true, meta: ["3 itens · aprendeu ontem", "3 items · learned yesterday"], fact: ["cupom vencido devolve COUPON_EXPIRED", "an expired coupon returns COUPON_EXPIRED"] },
+      { n: "Orders API", x: 515, y: 415, lines: 33, meta: ["5 itens", "5 items"], fact: ["pedido pago vira PAID em até 30 s", "a paid order becomes PAID within 30 s"] },
+      { n: "Customer Portal", x: 285, y: 415, lines: 26, meta: ["7 itens · lida 1×", "7 items · read 1×"], fact: ["conta de teste qa.cupom@lumen.test", "test account qa.cupom@lumen.test"] },
+      { n: "Refunds Worker", x: 140, y: 300, lines: 18, week: true, meta: ["2 itens · aprendeu 10/11", "2 items · learned 11/10"], fact: ["estorno parcial roda a cada 10 min", "partial refunds run every 10 min"] },
+      { n: "Reports Dashboard", x: 190, y: 145, lines: 11, meta: ["1 item", "1 item"], fact: ["o relatório diário fecha à meia-noite UTC", "the daily report closes at midnight UTC"] }
+    ];
+    var DIM = [{ n: "Legacy Batch", x: 70, y: 52 }, { n: "Admin Tools", x: 730, y: 52 }, { n: "Partner Sync", x: 730, y: 470 }];
+    var defs = el("defs", {}, mem);
+    var glow = el("radialGradient", { id: "mglow" }, defs);
+    el("stop", { offset: "0%", "stop-color": "#64d2ff", "stop-opacity": ".55" }, glow);
+    el("stop", { offset: "100%", "stop-color": "#64d2ff", "stop-opacity": "0" }, glow);
+    var edges = el("g", {}, mem);
+    APPS.forEach(function (a) { el("path", { d: "M" + C.x + "," + C.y + " Q" + ((C.x + a.x) / 2 + (a.y - C.y) * .12) + "," + ((C.y + a.y) / 2 - (a.x - C.x) * .12) + " " + a.x + "," + a.y, fill: "none", stroke: "rgba(100,210,255,.22)", "stroke-width": "1.2" }, edges); });
+    [[0, 1], [0, 2], [5, 1]].forEach(function (p) { var a = APPS[p[0]], b = APPS[p[1]]; el("line", { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: "rgba(161,140,255,.45)", "stroke-width": "1.3" }, edges); });
+    [[3, 4], [2, 3]].forEach(function (p) { var a = APPS[p[0]], b = APPS[p[1]]; el("line", { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: "rgba(100,210,255,.4)", "stroke-width": "1.2", "stroke-dasharray": "4 5" }, edges); });
+    DIM.forEach(function (d) { el("line", { x1: d.x, y1: d.y, x2: d.x + (C.x - d.x) * .12, y2: d.y + (C.y - d.y) * .12, stroke: "rgba(255,255,255,.12)" }, edges); el("circle", { cx: d.x, cy: d.y, r: 4.5, fill: "none", stroke: "#5f616a", "stroke-width": "1.3" }, mem); el("text", { x: d.x, y: d.y + 20, "text-anchor": "middle", "class": "dim" }, mem).textContent = d.n; });
+    // The hub, like an atom.
+    var hub = el("g", {}, mem);
+    el("circle", { cx: C.x, cy: C.y, r: 30, fill: "url(#mglow)" }, hub);
+    var orbitA = el("ellipse", { cx: C.x, cy: C.y, rx: 22, ry: 9, fill: "none", stroke: "rgba(100,210,255,.6)", "stroke-width": "1" }, hub);
+    var orbitB = el("ellipse", { cx: C.x, cy: C.y, rx: 22, ry: 9, fill: "none", stroke: "rgba(100,210,255,.6)", "stroke-width": "1" }, hub);
+    el("circle", { cx: C.x, cy: C.y, r: 6, fill: "#64d2ff" }, hub);
+    var clouds = [];
+    var rnd = (function () { var s = 7; return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; })();
+    APPS.forEach(function (a) {
+      var g = el("g", {}, mem);
+      var core = 6 + a.lines * .12;
+      el("circle", { cx: a.x, cy: a.y, r: 30 + a.lines * .45, fill: "url(#mglow)", opacity: ".8" }, g);
+      var cloud = el("g", {}, g);
+      for (var i = 0; i < a.lines; i++) { var ang = rnd() * Math.PI * 2, rad = core + 6 + rnd() * (14 + a.lines * .45); el("circle", { cx: a.x + Math.cos(ang) * rad, cy: a.y + Math.sin(ang) * rad, r: rnd() > .8 ? 1.6 : 1.1, fill: "#9be3ff", opacity: (.35 + rnd() * .55).toFixed(2) }, cloud); }
+      clouds.push({ g: cloud, x: a.x, y: a.y, speed: (rnd() > .5 ? 1 : -1) * (4 + rnd() * 5) });
+      if (a.week) el("circle", { cx: a.x, cy: a.y, r: core + 5, fill: "none", stroke: "rgba(100,210,255,.75)", "stroke-width": "1.2" }, g);
+      el("circle", { cx: a.x, cy: a.y, r: core, fill: "#64d2ff" }, g);
+      a.ring = el("circle", { cx: a.x, cy: a.y, r: core + 11, fill: "none", stroke: "#ffb340", "stroke-width": "2", opacity: "0" }, g);
+      a.label = el("text", { x: a.x, y: a.y + core + 30, "text-anchor": "middle" }, g); a.label.textContent = a.n;
+    });
+    var pulse = el("circle", { r: 3.5, fill: "#ffb340", opacity: "0" }, mem);
+    var list = document.getElementById("mem-apps"), now = document.getElementById("mem-now");
+    function renderList() {
+      list.innerHTML = APPS.map(function (a, i) { return '<li data-i="' + i + '"><span class="d' + (a.lines < 20 ? " s" : "") + '"></span><span><span class="n">' + a.n + "</span><small>" + T(a.meta) + '</small></span><span class="c">' + a.lines + "</span></li>"; }).join("");
+    }
+    renderList();
+    var pick = 0, since = 0, shown = false, last = 0;
+    function recall(i) {
+      APPS.forEach(function (a, k) { a.ring.setAttribute("opacity", k === i ? "1" : "0"); });
+      Array.prototype.forEach.call(list.children, function (li, k) { li.classList.toggle("now", k === i); });
+      now.innerHTML = (en() ? "Recalling · " : "Lembrando · ") + "<b>" + APPS[i].n + "</b> — " + T(APPS[i].fact);
+    }
+    recall(0);
+    hooks.push(function () { renderList(); recall(pick); });
+    watch(mem, function (v) { shown = v; });
+    function tick(t) {
+      requestAnimationFrame(tick);
+      if (!shown || still) return;
+      var dt = last ? Math.min(64, t - last) : 16; last = t;
+      var sec = t / 1000;
+      clouds.forEach(function (c) { c.g.setAttribute("transform", "rotate(" + (sec * c.speed).toFixed(2) + " " + c.x + " " + c.y + ")"); });
+      orbitA.setAttribute("transform", "rotate(" + (sec * 40) + " " + C.x + " " + C.y + ")");
+      orbitB.setAttribute("transform", "rotate(" + (sec * 40 + 90) + " " + C.x + " " + C.y + ")");
+      since += dt;
+      var a = APPS[pick], k = Math.min(1, since / 700);
+      pulse.setAttribute("cx", C.x + (a.x - C.x) * k); pulse.setAttribute("cy", C.y + (a.y - C.y) * k); pulse.setAttribute("opacity", k < 1 ? "1" : "0");
+      a.ring.setAttribute("r", (6 + a.lines * .12 + 11 + Math.sin(sec * 5) * 2).toFixed(1));
+      if (since > 2600) { since = 0; pick = (pick + 1) % APPS.length; recall(pick); }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  /* ---------- Syl Brain: the agents as a brain, working on an analysis ---------- */
+  var svg = document.getElementById("brain-svg");
+  if (svg) {
+    var COL = { an: "#64d2ff", ex: "#30d158", le: "#5ee6c8", co: "#ffb340", pe: "#ff9f5a", en: "#a18cff", cm: "#9aa0aa", to: "#ff6fae", ext: "#c7c8ce" };
+    var N = {
+      syl: [500, 300, "", ["Syl", "Syl"], "syl"],
+      trk: [128, 300, "↯", ["Azure DevOps · Jira", "Azure DevOps · Jira"], "ext"],
+      qa: [925, 330, "↯", ["Ambiente de QA", "QA environment"], "ext"],
+      ra: [232, 240, "RA", ["Analista de requisitos", "Requirements analyst"], "an"],
+      ru: [305, 292, "RU", ["O que mudou", "What changed"], "an"],
+      ct: [222, 330, "CT", ["Triagem de comentários", "Comment triage"], "an"],
+      re: [300, 172, "RE", ["Risk Engine", "Risk Engine"], "an"],
+      ca: [380, 150, "CA", ["Analista de código", "Code analyst"], "an"],
+      cs: [395, 228, "CS", ["Code Scout", "Code Scout"], "an"],
+      sd: [462, 100, "SD", ["Designer de cenários", "Scenario designer"], "an"],
+      sw: [575, 96, "SW", ["Redator de casos", "Case writer"], "an"],
+      cr: [642, 132, "C", ["Critic", "Critic"], "an"],
+      qe: [482, 190, "QE", ["Editor de QA", "QA editor"], "an"],
+      ui: [578, 188, "UI", ["Inventário de unidades", "Unit inventory"], "an"],
+      sa: [690, 250, "SA", ["Auditor da memória", "Memory auditor"], "an"],
+      tr: [585, 262, "TR", ["Leitor de modelos", "Template reader"], "pe"],
+      mem: [722, 150, "M", ["Memória", "Memory"], "cm"],
+      idx: [815, 172, "IS", ["Índice semântico", "Semantic index"], "cm"],
+      fun: [778, 232, "F", ["Fundamentos", "Fundamentals"], "cm"],
+      dl: [648, 322, "DL", ["Aprendiz do domínio", "Domain learner"], "le"],
+      di: [566, 372, "D", ["Destilador", "Distiller"], "le"],
+      mi: [382, 378, "MI", ["Modo interativo", "Interactive mode"], "co"],
+      vo: [300, 432, "V", ["Voz", "Voice"], "co"],
+      tg: [392, 462, "T", ["Telegram", "Telegram"], "co"],
+      pn: [232, 398, "P", ["Painel", "Panel"], "cm"],
+      qs: [708, 372, "QS", ["Preparo da execução", "Execution prep"], "ex"],
+      ts: [795, 350, "TS", ["Redator de specs", "Spec writer"], "ex"],
+      we: [735, 432, "WE", ["Executor web", "Web executor"], "ex"],
+      sr: [825, 420, "SR", ["Executor de passos", "Step runner"], "ex"],
+      da: [662, 466, "DA", ["Analista de defeitos", "Defect analyst"], "ex"],
+      ae: [722, 505, "AE", ["Automation Engineer", "Automation Engineer"], "ex"],
+      pe: [812, 482, "PE", ["Performance Engineer", "Performance Engineer"], "ex"],
+      cc: [455, 532, "AI", ["Claude Code", "Claude Code"], "en"],
+      cx: [545, 532, "AI", ["Codex", "Codex"], "en"],
+      cp: [500, 588, "AI", ["Copilot", "Copilot"], "en"],
+      mcp: [588, 446, "◇", ["Seus MCPs", "Your MCPs"], "to"],
+      term: [352, 522, ">_", ["Terminal", "Terminal"], "to"]
+    };
+    var E = "syl-ra syl-cs syl-sd syl-qe syl-mem syl-dl syl-mi syl-qs syl-we syl-da syl-ae syl-cc syl-cx syl-cp syl-mcp syl-tr syl-term ra-ru ra-ct ru-ct ra-re re-ca ca-cs cs-ui ca-sd sd-sw sw-cr cr-qe qe-sd tr-sw ui-qe sa-mem mem-idx mem-fun fun-idx cr-sa dl-di di-mem dl-mem mi-vo mi-tg vo-pn pn-mi qs-ts ts-sr we-sr we-da da-ae ae-pe pe-sr we-qa sr-qa trk-ru trk-ra cc-cx cx-cp cp-cc mcp-we term-cc".split(" ").map(function (p) { return p.split("-"); });
+    var STEPS = [
+      ["trk", "ru", ["O que mudou", "What changed"], ["critérios editados e 3 comentários novos na #4812", "criteria edited and 3 new comments on #4812"]],
+      ["ru", "ra", ["Analista de requisitos", "Requirements analyst"], ["relê os critérios e acha uma contradição", "rereads the criteria and finds a contradiction"]],
+      ["ra", "ct", ["Triagem de comentários", "Comment triage"], ["1 comentário muda a análise; 2 são conversa", "1 comment changes the analysis; 2 are chatter"]],
+      ["syl", "cs", ["Code Scout", "Code Scout"], ["lê o diff do PR 5517", "reads the diff of PR 5517"]],
+      ["cs", "ca", ["Analista de código", "Code analyst"], ["confere cada critério no código", "checks each criterion in the code"]],
+      ["ra", "re", ["Risk Engine", "Risk Engine"], ["aponta o risco do limite mensal", "flags the monthly-limit risk"]],
+      ["syl", "sd", ["Designer de cenários", "Scenario designer"], ["monta a cobertura: 4 cenários", "builds the coverage: 4 scenarios"]],
+      ["sd", "sw", ["Redator de casos", "Case writer"], ["escreve os casos no modelo Web", "writes the cases in the Web template"]],
+      ["sw", "cr", ["Critic", "Critic"], ["questiona o caso 2 e pede um dado melhor", "challenges case 2 and asks for better data"]],
+      ["cr", "qe", ["Editor de QA", "QA editor"], ["escreve a página de análise", "writes the analysis page"]],
+      ["syl", "mem", ["Memória", "Memory"], ["guarda a regra do cupom como provisória", "keeps the coupon rule as provisional"]],
+      ["syl", "we", ["Executor web", "Web executor"], ["valida a história no ambiente de QA", "validates the story in the QA environment"]],
+      ["we", "da", ["Analista de defeitos", "Defect analyst"], ["veredito: defeito do produto, com evidência", "verdict: product defect, with evidence"]],
+      ["da", "ae", ["Automation Engineer", "Automation Engineer"], ["escreve o teste Playwright do caminho verificado", "writes the Playwright test from the verified route"]]
+    ];
+    var bdefs = el("defs", {}, svg);
+    var regions = [["an", 360, 195, 200], ["cm", 760, 185, 130], ["le", 610, 345, 90], ["co", 320, 425, 130], ["ex", 755, 430, 150], ["en", 500, 550, 90]];
+    regions.forEach(function (r) { var g = el("radialGradient", { id: "rg-" + r[0] }, bdefs); el("stop", { offset: "0%", "stop-color": COL[r[0]], "stop-opacity": ".16" }, g); el("stop", { offset: "100%", "stop-color": COL[r[0]], "stop-opacity": "0" }, g); });
+    var dg = el("radialGradient", { id: "dot" }, bdefs); el("stop", { offset: "0%", "stop-color": "#fff" }, dg); el("stop", { offset: "40%", "stop-color": "#64d2ff" }, dg); el("stop", { offset: "100%", "stop-color": "#64d2ff", "stop-opacity": "0" }, dg);
+    var clip = el("clipPath", { id: "brain-shape" }, bdefs);
+    var shape = "M175,370 C118,262 186,128 330,98 C402,42 526,43 606,84 C706,60 832,110 860,206 C932,266 914,394 850,432 C862,512 780,570 696,550 C646,592 566,587 549,550 L549,614 L452,614 L452,550 C396,570 300,550 262,492 C190,482 150,432 175,370 Z";
+    el("path", { d: shape }, clip);
+    var regionLayer = el("g", { "clip-path": "url(#brain-shape)" }, svg);
+    regions.forEach(function (r) { el("circle", { cx: r[1], cy: r[2], r: r[3], fill: "url(#rg-" + r[0] + ")" }, regionLayer); });
+    el("path", { d: shape, fill: "none", stroke: "rgba(255,255,255,.16)", "stroke-width": "1.4" }, svg);
+    el("path", { d: "M190,352 C290,372 410,340 520,350 M560,345 C650,312 760,330 870,340 M600,90 C610,200 600,300 620,340", fill: "none", stroke: "rgba(255,255,255,.06)", "stroke-width": "1.2" }, svg);
+    var lobes = [[["LOBO FRONTAL · ANÁLISE", "FRONTAL LOBE · ANALYSIS"], 150, 100, "start"], [["MEMÓRIA", "MEMORY"], 905, 120, "end"], [["LOBO TEMPORAL · CONVERSA", "TEMPORAL LOBE · CONVERSATION"], 120, 545, "start"], [["CEREBELO · EXECUÇÃO", "CEREBELLUM · EXECUTION"], 975, 590, "end"], [["TRONCO · MOTORES", "STEM · ENGINES"], 500, 632, "middle"]];
+    var lobeEls = lobes.map(function (l) { var t = el("text", { x: l[1], y: l[2], "text-anchor": l[3], "class": "lobe" }, svg); return t; });
+    var edgeLayer = el("g", {}, svg);
+    var edgeEls = {};
+    E.forEach(function (p) { var a = N[p[0]], b = N[p[1]]; edgeEls[p[0] + "-" + p[1]] = el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], "class": "be" }, edgeLayer); });
+    function edge(a, b) { return edgeEls[a + "-" + b] || edgeEls[b + "-" + a]; }
+    var nodeEls = {}, labelEls = {};
+    Object.keys(N).forEach(function (id) {
+      var n = N[id], g = el("g", { "class": "bn" }, svg), c = COL[n[4]] || "#64d2ff";
+      if (id === "syl") {
+        el("circle", { cx: n[0], cy: n[1], r: 54, fill: "url(#rg-an)" }, g);
+        el("circle", { cx: n[0], cy: n[1], r: 34, fill: "#0e0f12", stroke: "rgba(100,210,255,.5)", "stroke-width": "1.5", "class": "ring" }, g);
+        el("circle", { cx: n[0], cy: n[1], r: 34, fill: "#0e0f12", stroke: "rgba(100,210,255,.35)", "stroke-width": "1.5" }, g);
+        el("image", { href: "assets/syl-mark-dark.png", x: n[0] - 30, y: n[1] - 30, width: 60, height: 60 }, g);
+        labelEls[id] = el("text", { x: n[0], y: n[1] + 52, "text-anchor": "middle", "class": "lbl" }, g);
+      } else {
+        el("circle", { cx: n[0], cy: n[1], r: 17, fill: "none", stroke: c, "stroke-width": "1.5", "class": "ring" }, g);
+        if (n[4] === "cm") el("rect", { x: n[0] - 15, y: n[1] - 15, width: 30, height: 30, rx: 7, fill: "#121418", stroke: c, "stroke-width": "1.4" }, g);
+        else if (n[4] === "to") el("rect", { x: n[0] - 13, y: n[1] - 13, width: 26, height: 26, rx: 4, fill: "#121418", stroke: c, "stroke-width": "1.4", transform: "rotate(45 " + n[0] + " " + n[1] + ")" }, g);
+        else el("circle", { cx: n[0], cy: n[1], r: 17, fill: "#121418", stroke: c, "stroke-width": "1.5", "stroke-dasharray": n[4] === "ext" ? "3 3" : "none" }, g);
+        el("text", { x: n[0], y: n[1] + 3.5, "text-anchor": "middle", "class": "ini", fill: c }, g).textContent = n[2];
+        labelEls[id] = el("text", { x: n[0], y: n[1] + 31, "text-anchor": "middle", "class": "lbl" }, g);
+      }
+      nodeEls[id] = g;
+    });
+    function labels() { Object.keys(N).forEach(function (id) { labelEls[id].textContent = T(N[id][3]); }); lobeEls.forEach(function (t, i) { t.textContent = T(lobes[i][0]); }); }
+    labels();
+    var live = document.getElementById("brain-live");
+    var packets = [], step = -1, stepAt = 0, bshown = false, blast = 0;
+    for (var i = 0; i < 14; i++) packets.push({ c: el("circle", { r: 2.2, fill: "#9be3ff", opacity: "0" }, svg), e: null, t: 0, sp: 0 });
+    var head = el("circle", { r: 9, fill: "url(#dot)", opacity: "0" }, svg);
+    function caption() { var s = STEPS[Math.max(0, step)]; live.innerHTML = (en() ? "Working now · " : "Trabalhando agora · ") + "<b>" + T(s[2]) + "</b> " + T(s[3]); }
+    hooks.push(function () { labels(); caption(); });
+    function go(k) {
+      Object.keys(nodeEls).forEach(function (id) { nodeEls[id].classList.remove("on"); });
+      Object.keys(edgeEls).forEach(function (id) { edgeEls[id].classList.remove("on"); });
+      step = k; stepAt = performance.now();
+      var s = STEPS[k], e = edge(s[0], s[1]);
+      if (e) e.classList.add("on");
+      nodeEls[s[0]].classList.add("on");
+      caption();
+    }
+    go(0);
+    if (still) { nodeEls[STEPS[0][1]].classList.add("on"); }
+    watch(svg, function (v) { bshown = v; });
+    function btick(t) {
+      requestAnimationFrame(btick);
+      if (!bshown || still) return;
+      var dt = blast ? Math.min(64, t - blast) : 16; blast = t;
+      // Ambient traffic: faint packets on random connections.
+      packets.forEach(function (p) {
+        if (!p.e) { if (Math.random() < .02) { p.e = E[Math.floor(Math.random() * E.length)]; p.t = 0; p.sp = .0004 + Math.random() * .0006; if (Math.random() < .5) p.e = [p.e[1], p.e[0]]; } else return; }
+        p.t += p.sp * dt;
+        var a = N[p.e[0]], b = N[p.e[1]];
+        if (p.t >= 1) { p.e = null; p.c.setAttribute("opacity", "0"); return; }
+        p.c.setAttribute("cx", a[0] + (b[0] - a[0]) * p.t); p.c.setAttribute("cy", a[1] + (b[1] - a[1]) * p.t); p.c.setAttribute("opacity", (Math.sin(p.t * Math.PI) * .7).toFixed(2));
+      });
+      // The step being worked: a bright pulse travels, then the agent lights up.
+      var s = STEPS[step], a = N[s[0]], b = N[s[1]], k = Math.min(1, (t - stepAt) / 850), ease = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      head.setAttribute("cx", a[0] + (b[0] - a[0]) * ease); head.setAttribute("cy", a[1] + (b[1] - a[1]) * ease); head.setAttribute("opacity", k < 1 ? "1" : "0");
+      if (k >= 1 && !nodeEls[s[1]].classList.contains("on")) { nodeEls[s[0]].classList.remove("on"); nodeEls[s[1]].classList.add("on"); }
+      if (t - stepAt > 2300) go((step + 1) % STEPS.length);
+    }
+    requestAnimationFrame(btick);
+  }
+})();
+</script>
+<script>
+/* PT ↔ EN: the Portuguese is in the page; each element carries its English in data-en. */
+(function () {
+  var META = {
+    pt: { title: "Syl · a engenheira de QA do seu time", lang: "pt-BR" },
+    en: { title: "Syl · the QA engineer for your team", lang: "en" }
+  };
+  var nodes = Array.prototype.slice.call(document.querySelectorAll("[data-en]"));
+  nodes.forEach(function (el) { el.setAttribute("data-pt", el.innerHTML); });
+  var labelled = Array.prototype.slice.call(document.querySelectorAll("[data-en-label]"));
+  labelled.forEach(function (el) { el.setAttribute("data-pt-label", el.getAttribute("aria-label") || ""); });
+  var video = document.getElementById("promo");
+
+  function apply(lang) {
+    nodes.forEach(function (el) { el.innerHTML = el.getAttribute(lang === "en" ? "data-en" : "data-pt"); });
+    labelled.forEach(function (el) { el.setAttribute("aria-label", el.getAttribute(lang === "en" ? "data-en-label" : "data-pt-label")); });
+    document.documentElement.lang = META[lang].lang;
+    document.title = META[lang].title;
+    document.querySelectorAll(".lang button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-lang") === lang)); });
+    if (video && video.getAttribute("data-lang") !== lang) {
+      video.setAttribute("data-lang", lang);
+      video.poster = "assets/syl-promo-" + lang + ".jpg";
+      video.src = "assets/syl-promo-" + lang + ".mp4";
+    }
+    try { localStorage.setItem("syl-site-lang", lang); } catch (e) {}
+    (window.__langHooks || []).forEach(function (f) { f(lang); });
+  }
+
+  var saved = null;
+  try { saved = localStorage.getItem("syl-site-lang"); } catch (e) {}
+  var first = saved || (/^pt/i.test(navigator.language || "") ? "pt" : "en");
+  if (video) video.setAttribute("data-lang", "pt");
+  apply(first);
+  document.querySelectorAll(".lang button").forEach(function (b) {
+    b.addEventListener("click", function () { apply(b.getAttribute("data-lang")); });
+  });
+
+  /* Copy buttons on the commands. */
+  document.querySelectorAll(".cmd button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var cmd = b.closest(".cmd");
+      var en = document.documentElement.lang === "en";
+      var text = (en && cmd.getAttribute("data-copy-en")) || cmd.getAttribute("data-copy");
+      var done = function () { var old = b.textContent; b.textContent = en ? "Copied" : "Copiado"; setTimeout(function () { b.textContent = old; }, 1400); };
+      if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, function () {}); else done();
+    });
+  });
+
+  /* The journey: click a step, or let it advance by itself until the person picks one. */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll(".j-steps button"));
+  var panels = Array.prototype.slice.call(document.querySelectorAll(".j-panel"));
+  var current = 0, picked = false, visible = false;
+  function show(i, focus) {
+    current = (i + tabs.length) % tabs.length;
+    tabs.forEach(function (t, k) { t.setAttribute("aria-selected", String(k === current)); t.tabIndex = k === current ? 0 : -1; });
+    panels.forEach(function (p, k) { p.classList.toggle("on", k === current); });
+    if (focus) tabs[current].focus();
+    var list = tabs[current].closest(".j-steps");
+    if (list && list.scrollWidth > list.clientWidth) list.scrollTo({ left: tabs[current].parentElement.offsetLeft - 16, behavior: "smooth" });
+  }
+  tabs.forEach(function (t, k) {
+    t.addEventListener("click", function () { picked = true; show(k); });
+    t.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); picked = true; show(current + 1, true); }
+      if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); picked = true; show(current - 1, true); }
+    });
+  });
+  var stage = document.querySelector(".j-stage");
+  if (stage && "IntersectionObserver" in window) new IntersectionObserver(function (es) { visible = es[0].isIntersecting; }, { threshold: 0.4 }).observe(stage);
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) setInterval(function () { if (!picked && visible && !document.hidden) show(current + 1); }, 7000);
+
+  /* Sections fade in as they come into view. */
+  var items = document.querySelectorAll(".reveal");
+  if ("IntersectionObserver" in window && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+    }, { rootMargin: "0px 0px -8% 0px" });
+    items.forEach(function (el) { io.observe(el); });
+  } else {
+    items.forEach(function (el) { el.classList.add("in"); });
+  }
+})();
+</script>
+</body>
+</html>
